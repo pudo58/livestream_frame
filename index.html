@@ -676,7 +676,7 @@ body, .donor{ color:#f2f6ff !important; }
         <!-- LEFT: Chat + Donate -->
         <div class="left-col">
             <section class="zone chat tilt" data-depth="1.1" data-tilt-rot="3" data-tilt-x="2.2" data-tilt-y="2.2"
-                data-video-id="MY0hAbNOGok"> <!-- đổi ID của bạn ở đây -->
+                data-video-id=""> <!-- đổi ID của bạn ở đây -->
                 <div class="panel-head">
                     <div class="pill">YouTube Chat</div>
                     <div class="pill">Live</div>
@@ -782,7 +782,7 @@ body, .donor{ color:#f2f6ff !important; }
             const host = location.hostname || 'localhost';
             // Ưu tiên data-video-id; nếu không có, lấy ?v=... trên URL trang
             const vid = (zone.dataset.videoId || new URLSearchParams(location.search).get('v') || '').trim();
-
+            
             if (vid) {
                 iframe.src = `https://www.youtube.com/live_chat?v=${vid}&embed_domain=${host}&dark_theme=1`;
             } else {
