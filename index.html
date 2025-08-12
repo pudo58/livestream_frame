@@ -1,299 +1,307 @@
+
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Khung Livestream LOL – Overlay</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&family=Montserrat:wght@300;400;600;800&display=swap" rel="stylesheet">
-  <style>
-    :root{
-      --primary:#ff2d55;  /* hồng neon */
-      --accent:#4dd0ff;   /* xanh dương neon */
-      --bg:#0b0f1a;       /* nền tối */
-      --glass:rgba(255,255,255,.08);
-      --stroke:#ffffff10;
-      --text:#e6f1ff;
-    }
-    html,body{
-      width:100%;height:100%;margin:0;padding:0;background:transparent; /* Cho OBS Browser Source trong suốt */
-      font-family: "Montserrat", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-      color:var(--text);
-      overflow:hidden;
-    }
-    /* Lớp hạt chuyển động */
-    #particles{position:fixed;inset:0;z-index:1;pointer-events:none;}
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LOL Overlay – Darius Red & Gold 3D • Borderless Glow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#f4f7ff;
+    --bgA:#1a0f18;
+    --bgB:#0e1733;
+    --crimson:#ff2b45;     /* stronger red */
+    --crimsonDeep:#b4001a; /* deep red core */
+    --gold:#ffd36b;
+    --goldHot:#ffe8a6;
+    --amber:#ff8a3a;
+    --glass:#ffffff0a;
+    --stroke:#ffffff1c;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; color:var(--ink);
+    font-family:"Plus Jakarta Sans",system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    overflow:hidden;
+    background:
+      radial-gradient(1400px 900px at 15% 10%, #320f24, transparent 60%),
+      radial-gradient(1200px 800px at 85% 85%, #132049, transparent 60%),
+      linear-gradient(135deg, var(--bgA), var(--bgB));
+  }
 
-    /* Khung tổng */
-    .overlay{
-      position:relative;z-index:2;box-sizing:border-box;
-      width:100%;height:100%;
-      padding:24px;
-      display:grid;grid-template-columns:1fr 360px;grid-template-rows:auto 1fr auto;gap:16px;
-      background:linear-gradient(120deg, #00000000, #00000000), radial-gradient(1200px 800px at 10% 10%, #ffffff06, #0000), radial-gradient(1000px 600px at 90% 90%, #ffffff05, #0000);
-      backdrop-filter:saturate(120%) contrast(110%);
-    }
+  /* ===== BACKGROUND LAYERS ===== */
+  .aurora{position:fixed;inset:0;pointer-events:none;z-index:0}
+  .a{position:absolute;inset:-25%;filter:blur(110px);opacity:.55;mix-blend-mode:screen;animation:flow 28s ease-in-out infinite}
+  .a.r{background:radial-gradient(closest-side, var(--crimson), transparent 60%)}
+  .a.g{background:radial-gradient(closest-side, var(--gold), transparent 60%);animation-delay:-7s}
+  .a.b{background:radial-gradient(closest-side, #6b8cff, transparent 60%);animation-delay:-14s}
+  @keyframes flow{0%{transform:translate(0,0) rotate(0)}50%{transform:translate(9%,-7%) rotate(12deg)}100%{transform:translate(0,0) rotate(0)}}
 
-    /* Viền neon động quanh màn hình */
-    .neon-frame{position:fixed;inset:0;pointer-events:none;z-index:2}
-    .neon-frame:before{
-      content:"";position:absolute;inset:16px;border-radius:18px;
-      background:conic-gradient(from 0deg, var(--primary), var(--accent), var(--primary));
-      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-      -webkit-mask-composite: xor; mask-composite: exclude;
-      padding:2px; /* độ dày viền */
-      animation:spin 14s linear infinite;
-      filter:drop-shadow(0 0 12px var(--primary)) drop-shadow(0 0 20px var(--accent));
-    }
-    @keyframes spin{to{transform:rotate(1turn)}}
+  .grid{position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.12;background:
+        linear-gradient(transparent 39px, #fff2 40px),
+        linear-gradient(90deg, transparent 39px, #fff2 40px);
+        background-size:40px 40px,40px 40px;
+        animation:gridmove 42s linear infinite}
+  @keyframes gridmove{from{transform:translateY(0)}to{transform:translateY(-40px)}}
 
-    /* Header */
-    .header{grid-column:1/3;display:flex;align-items:center;gap:16px}
-    .logo{
-      width:52px;height:52px;border-radius:14px;display:grid;place-items:center;
-      background:linear-gradient(135deg,var(--primary),var(--accent));
-      box-shadow:0 8px 30px #0008, 0 0 28px var(--primary);
-    }
-    .title{
-      display:flex;flex-direction:column;line-height:1.05;
-    }
-    .title .name{font-family:"Orbitron", sans-serif;font-size:28px;letter-spacing:1px}
-    .title .tag{opacity:.8;font-size:13px}
-    .live-badge{
-      margin-left:auto;display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:999px;
-      background:linear-gradient(135deg, var(--primary), #ff7e96);
-      box-shadow:0 0 14px #ff2d55aa inset, 0 0 20px #ff2d55aa;
-      font-weight:800; text-transform:uppercase; letter-spacing:1px; font-size:12px;
-      animation:pulse 1.6s ease-in-out infinite;
-    }
-    .dot{width:10px;height:10px;border-radius:50%;background:#fff}
-    @keyframes pulse{
-      0%,100%{transform:translateZ(0) scale(1)}
-      50%{transform:translateZ(0) scale(1.06)}
-    }
+  #dust{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.65}
 
-    /* Webcam khung tròn neon */
-    .webcam-wrap{position:absolute;left:32px;bottom:110px;width:340px;height:340px;}
-    .webcam{
-      width:100%;height:100%;border-radius:50%;overflow:hidden;position:relative;
-      background:linear-gradient(135deg,#101521,#070a12);
-      border:2px solid #ffffff14;
-      box-shadow:0 20px 60px #0009;
-    }
-    .webcam::before{ /* vòng ngoài */
-      content:"";position:absolute;inset:-10px;border-radius:50%;
-      background:conic-gradient(var(--primary), var(--accent), var(--primary));
-      filter:blur(10px) brightness(1.2);
-      animation:spin 10s linear infinite;
-      z-index:-1;
-    }
-    .webcam .mask{position:absolute;inset:0;opacity:.18;background:radial-gradient(800px 400px at 30% 20%,#fff,transparent)}
-    .webcam .placeholder{position:absolute;inset:0;display:grid;place-items:center;opacity:.6;font-size:14px}
+  /* ===== LAYOUT (same structure, bigger left column) ===== */
+  .wrap{position:relative;z-index:2;height:100vh;padding:22px;display:grid;gap:18px;
+        grid-template-columns:500px 1fr;grid-template-rows:auto 1fr}
 
-    /* Panel chat phải */
-    .chat{
-      grid-column:2;grid-row:2/span 2;
-      border-radius:18px; background:linear-gradient(180deg,var(--glass), #ffffff06);
-      border:1px solid var(--stroke); backdrop-filter: blur(8px);
-      box-shadow:0 10px 50px #0008, inset 0 1px 0 #ffffff1a;
-      display:flex;flex-direction:column;overflow:hidden;
-    }
-    .chat .head{padding:12px 14px;border-bottom:1px solid var(--stroke);display:flex;gap:10px;align-items:center}
-    .chat .head .pill{padding:6px 10px;border-radius:999px;background:#ffffff10;font-size:12px}
-    .chat .body{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
-    .msg{display:flex;gap:10px;align-items:flex-start}
-    .msg .avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--primary));opacity:.9}
-    .msg .bubble{flex:1;padding:10px 12px;border-radius:12px;background:#ffffff10;border:1px solid #ffffff12}
-    .msg .name{font-weight:700;font-size:12px;opacity:.85}
-    .msg .text{font-size:13px;opacity:.95}
+  /* ===== HEADER ===== */
+  .header{grid-column:1/3;display:flex;align-items:center;gap:16px}
+  .crest{width:70px;height:70px;border-radius:20px;display:grid;place-items:center;
+         background:linear-gradient(180deg,#2a0f25,#0f1630);
+         border:1px solid var(--stroke);box-shadow:0 26px 110px #0009, inset 0 1px 0 #ffffff22;
+         position:relative;overflow:hidden}
+  .crest:after{content:"";position:absolute;inset:-16px;border-radius:24px;filter:blur(16px);
+    background:conic-gradient(var(--crimson),var(--gold),#ff7e2e,#6b8cff,var(--crimson));
+    opacity:.8;animation:ring 16s linear infinite}
+  @keyframes ring{to{transform:rotate(1turn)}}
+  .title .name{font-family:"Orbitron";font-size:34px;letter-spacing:1.2px;
+    background:linear-gradient(92deg,var(--goldHot) 0%, var(--gold) 40%, #fff8d0 60%, #ffb84d 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent; filter:drop-shadow(0 2px 10px rgba(255,199,88,.3))}
+  .title .sub{opacity:.9}
+  .live{margin-left:auto;display:flex;gap:10px;align-items:center;padding:10px 14px;border-radius:999px;
+        background:linear-gradient(135deg, var(--crimson), var(--gold)); color:#2a0f12; font-weight:800; letter-spacing:.8px;
+        box-shadow:0 8px 28px #000a, 0 0 34px rgba(255,150,189,.5); text-transform:uppercase; animation:pulse 1.8s ease-in-out infinite}
+  .dot{width:10px;height:10px;border-radius:999px;background:#fff}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
 
-    /* Thẻ thông tin cạnh webcam */
-    .info-cards{position:absolute;left:392px;bottom:110px;display:flex;gap:12px;flex-wrap:wrap}
-    .card{min-width:220px;padding:12px 14px;border-radius:14px;background:linear-gradient(180deg,var(--glass), #ffffff05);border:1px solid var(--stroke);backdrop-filter:blur(8px);box-shadow:0 10px 40px #0008}
-    .card .label{font-size:11px;opacity:.75;text-transform:uppercase;letter-spacing:.8px}
-    .card .value{font-family:"Orbitron";font-size:20px;margin-top:4px}
+  /* ===== BORDERLESS ZONES (strong 3D glow) ===== */
+  .zone{position:relative;border-radius:28px;overflow:hidden;transform-style:preserve-3d;
+        background:radial-gradient(1200px 800px at 10% 10%, #ffffff0d, transparent 60%),
+                   linear-gradient(180deg,#141c4dcc,#2a0f25cc);
+        box-shadow:
+          0 40px 120px rgba(0,0,0,.55),
+          inset 0 0 0 1px rgba(255,255,255,.08),
+          inset 0 40px 120px rgba(255, 88, 88, .05);
+  }
+  /* outer halo */
+  .zone::before{content:"";position:absolute;inset:-30px;border-radius:inherit;filter:blur(26px);
+    background:conic-gradient(from 0deg, rgba(255,43,69,.55), rgba(255,211,107,.55), rgba(255,138,58,.55), rgba(255,43,69,.55));
+    opacity:.8; animation:haloRotate 16s linear infinite}
+  @keyframes haloRotate{to{transform:rotate(1turn)}}
+  /* inner soft rim */
+  .zone::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+    box-shadow:inset 0 0 0 2px rgba(255,211,107,.35), inset 0 0 60px rgba(255,43,69,.18), inset 0 0 120px rgba(255,211,107,.1);
+    animation:rimBreathe 5.2s ease-in-out infinite}
+  @keyframes rimBreathe{0%,100%{opacity:.6}50%{opacity:1}}
 
-    /* Thanh social dưới */
-    .footer{grid-column:1;grid-row:3;display:flex;align-items:center;gap:10px}
-    .social{
-      display:flex;gap:10px;padding:8px 12px;border-radius:999px;align-items:center;
-      background:linear-gradient(180deg,var(--glass), #ffffff06); border:1px solid var(--stroke);
-      box-shadow:0 10px 30px #0008; backdrop-filter:blur(8px);
-    }
-    .social .item{display:flex;gap:8px;align-items:center;padding:6px 10px;border-radius:999px;background:#ffffff0a}
-    .social svg{width:16px;height:16px;opacity:.9}
+  .panel-head{position:relative;display:flex;gap:10px;align-items:center;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.12);
+              background:linear-gradient(180deg,#1c265dcc,#2a0f25cc)}
+  .pill{padding:6px 12px;border-radius:999px;background:#1d274f;border:1px solid #31407a;font-size:12px;color:#dce6ff;
+        box-shadow:inset 0 0 0 1px #1d274f, 0 6px 16px rgba(0,0,0,.35);position:relative;overflow:hidden}
+  .pill::after{content:"";position:absolute;inset:0;background:linear-gradient(120deg,transparent 30%,rgba(255,255,255,.25) 50%,transparent 70%);
+               transform:translateX(-100%);animation:tabShine 6s ease-in-out infinite}
+  @keyframes tabShine{0%{transform:translateX(-120%)}50%{transform:translateX(120%)}100%{transform:translateX(120%)}}
 
-    /* Khung tiêu đề game ở góc trên trái */
-    .game-tag{position:absolute;top:92px;left:32px;display:flex;gap:10px;align-items:center}
-    .chip{padding:6px 10px;border-radius:999px;background:linear-gradient(135deg,#ffffff10,#ffffff05);border:1px solid var(--stroke);backdrop-filter:blur(6px);box-shadow:0 10px 30px #0008;font-size:12px}
+  /* LEFT COLUMN: bigger donate */
+  .left-col{display:grid;grid-template-rows:1fr 360px;gap:18px}
+  .chat iframe{border:0;width:100%;height:calc(100% - 54px);background:#0a0f18}
+  .runic{position:absolute;inset:0;pointer-events:none;opacity:.2;
+         background:
+           repeating-linear-gradient(135deg, rgba(255,211,107,.22) 0 2px, transparent 2px 22px),
+           radial-gradient(1200px 800px at 10% 10%, #fff3, transparent 60%);
+         mix-blend-mode:screen;animation:runes 20s linear infinite}
+  @keyframes runes{to{background-position:320px -320px, 0 0}}
 
-    /* Hiệu ứng glitch cho chữ "LIVE" */
-    .glitch{position:relative}
-    .glitch::before,.glitch::after{content:attr(data-text);position:absolute;left:0;top:0;clip-path:inset(0 0 0 0)}
-    .glitch::before{transform:translateX(-1px);text-shadow:-2px 0 var(--accent);animation:gl1 2s infinite ease-in-out alternate}
-    .glitch::after{transform:translateX(1px);text-shadow:2px 0 var(--primary);animation:gl2 2.2s infinite ease-in-out alternate}
-    @keyframes gl1{0%{clip-path:inset(0 0 80% 0)}50%{clip-path:inset(10% 0 20% 0)}100%{clip-path:inset(60% 0 0 0)}}
-    @keyframes gl2{0%{clip-path:inset(60% 0 0 0)}50%{clip-path:inset(0 0 70% 0)}100%{clip-path:inset(0 0 10% 0)}}
+  .donate-list{height:calc(100% - 54px);overflow:auto;padding:14px;display:flex;flex-direction:column;gap:12px}
+  .donate-item{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:18px;
+    background:linear-gradient(180deg,#1a2058,#2a0f25);border:1px solid #3a4aa0;box-shadow:0 18px 42px #000a;position:relative;overflow:hidden}
+  .donor{font-weight:800}
+  .amt{margin-left:auto;font-family:"Orbitron";font-size:19px;background:linear-gradient(90deg,var(--gold),#ffb36b);
+       -webkit-background-clip:text;background-clip:text;color:transparent}
+  .glint{position:absolute;top:-50%;left:-20%;width:50%;height:200%;background:linear-gradient(120deg,transparent,rgba(255,255,255,.22),transparent);
+         transform:rotate(18deg);animation:glint 6.5s ease-in-out infinite}
+  @keyframes glint{0%{left:-60%}50%{left:120%}100%{left:120%}}
 
-    /* Tối ưu cho 16:9 nhưng vẫn responsive */
-    @media (max-width:1200px){
-      .overlay{grid-template-columns:1fr 300px}
-      .webcam-wrap{transform:scale(.85);transform-origin:bottom left}
-      .info-cards{transform:scale(.9);transform-origin:bottom left}
-    }
-    @media (max-width:900px){
-      .overlay{grid-template-columns:1fr}
-      .chat{grid-column:1;grid-row:auto;order:3;height:40vh}
-      .webcam-wrap,.info-cards{position:static;transform:none;margin-top:8px}
-    }
-  </style>
+  /* RIGHT: GAME STAGE — borderless area with strong 3D */
+  .game{grid-column:2;grid-row:2/ span 1;display:flex;flex-direction:column}
+  .game .stage{flex:1;position:relative}
+  .stage .mask{position:absolute;inset:0;background:linear-gradient(180deg,transparent,transparent)} /* transparent for OBS */
+  .corner-wrap{position:absolute;inset:0;pointer-events:none}
+  .cf{position:absolute;width:128px;height:128px;border-radius:24px;background:linear-gradient(145deg,#27326a,#191f49);
+      box-shadow:inset 0 0 0 2px rgba(96,214,255,.25), 0 0 40px rgba(255,211,107,.25), 0 0 60px rgba(255,43,69,.25);
+      filter:drop-shadow(0 0 26px rgba(255,211,107,.55));}
+  .cf::after{content:"";position:absolute;inset:0;border-radius:inherit;background:
+      radial-gradient(circle at 70% 30%, rgba(255,255,255,.35), transparent 45%);
+      mix-blend-mode:screen;animation:flare 4.2s ease-in-out infinite}
+  @keyframes flare{0%,100%{opacity:.45}50%{opacity:1}}
+  .cf.tl{top:26px;left:26px}
+  .cf.tr{top:26px;right:26px}
+  .cf.bl{bottom:26px;left:26px}
+  .cf.br{bottom:26px;right:26px}
+
+  .sweep{position:absolute;inset:0;pointer-events:none;mix-blend-mode:screen;background:
+    linear-gradient(110deg, transparent 20%, rgba(255,255,255,.10) 50%, transparent 80%);
+    background-size:220% 100%;animation:sweep 5.6s ease-in-out infinite}
+  @keyframes sweep{0%{background-position:220% 0}50%{background-position:0 0}100%{background-position:-220% 0}}
+
+  .streak{position:absolute;height:2px;width:26%;left:-20%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.95),transparent);
+          opacity:.45;filter:drop-shadow(0 0 10px #fff)}
+  .streak.s1{top:14%;animation:streak 8s linear infinite}
+  .streak.s2{top:48%;animation:streak 10s linear infinite -3s}
+  .streak.s3{top:82%;animation:streak 12s linear infinite -5s}
+  @keyframes streak{to{transform:translateX(760%)}}
+
+  .watermark{position:absolute;right:26px;bottom:22px;width:180px;opacity:.2;filter:drop-shadow(0 0 14px rgba(255,211,107,.4))}
+  .watermark svg{display:block;width:100%;height:auto}
+
+  /* Parallax – separate depth for each area */
+  .tilt{transition:transform .2s ease}
+  @media (max-width:1320px){.wrap{grid-template-columns:460px 1fr}}
+  @media (max-width:980px){.wrap{grid-template-columns:1fr}.left-col{grid-template-rows:1fr 300px}.game{order:3;height:54vh}}
+</style>
 </head>
 <body>
-  <canvas id="particles"></canvas>
-  <div class="neon-frame" aria-hidden="true"></div>
+  <!-- Background layers -->
+  <div class="aurora" aria-hidden="true">
+    <div class="a r"></div>
+    <div class="a g"></div>
+    <div class="a b"></div>
+  </div>
+  <canvas id="dust"></canvas>
+  <div class="grid" aria-hidden="true"></div>
 
-  <div class="overlay">
+  <div class="wrap">
     <!-- HEADER -->
-    <header class="header">
-      <div class="logo" aria-hidden="true">
-        <!-- Logo D dạng khiên tối giản -->
-        <svg viewBox="0 0 64 64" width="30" height="30" fill="none">
-          <path d="M8 12l24-8 24 8v16c0 14.4-9.9 27.2-24 32-14.1-4.8-24-17.6-24-32V12z" stroke="white" stroke-opacity=".6"/>
-          <path d="M22 17h12c7 0 12 5 12 12s-5 12-12 12H22V17z" fill="white" fill-opacity=".8"/>
+    <header class="header tilt" data-depth="0.6">
+      <div class="crest" aria-hidden="true">
+        <svg width="34" height="34" viewBox="0 0 64 64" fill="none">
+          <path d="M8 16l24-8 24 8v16c0 14.4-9.9 27.2-24 32-14.1-4.8-24-17.6-24-32V16z" stroke="url(#grad)" stroke-width="2"/>
+          <defs><linearGradient id="grad" x1="0" y1="0" x2="64" y2="64"><stop stop-color="#ffd36b"/><stop offset="1" stop-color="#ff2b45"/></linearGradient></defs>
         </svg>
       </div>
       <div class="title">
         <div class="name">THỌ DARIUS</div>
-        <div class="tag">Live: Rank Solo • Toplane • Darius Main</div>
+        <div class="sub">Red & Gold 3D • Borderless Glow</div>
       </div>
-      <div class="live-badge"><span class="dot"></span><span class="glitch" data-text="LIVE">LIVE</span></div>
+      <div class="live"><span class="dot"></span> LIVE</div>
     </header>
 
-    <!-- KHU VỰC CHÍNH BÊN TRÁI (để trống cho gameplay) -->
-    <main style="grid-column:1;grid-row:2;position:relative">
-      <!-- Game hiển thị phía sau overlay (OBS/Stream) -->
+    <!-- LEFT: Chat + Donate (borderless zones) -->
+    <div class="left-col">
+      <section class="zone chat tilt" data-depth="1.1" data-tilt="0.9" data-tilt-rot="3" data-tilt-x="2.2" data-tilt-y="2.2" data-speed="1.05" data-parallax="1">
+        <div class="panel-head">
+          <div class="pill">YouTube Chat</div>
+          <div class="pill">Live</div>
+        </div>
+        <div class="runic"></div>
+        <iframe id="ytChat" allowfullscreen></iframe>
+      </section>
 
-      <!-- Webcam & thẻ info -->
-      <div class="webcam-wrap">
-        <div class="webcam" id="webcam">
-          <!-- Thay bằng <video> hoặc <img> tuỳ bạn; đây là placeholder -->
-          <div class="placeholder">WEBCAM PREVIEW</div>
-          <div class="mask"></div>
+      <section class="zone donate tilt" data-depth="1.2" data-tilt="1" data-tilt-rot="3" data-tilt-x="2.4" data-tilt-y="2.4" data-speed="1.08" data-parallax="1">
+        <div class="panel-head">
+          <div class="pill">Donate</div>
+          <div class="pill">Top recent</div>
+        </div>
+        <div class="runic"></div>
+        <div class="donate-list" id="donateList">
+          <div class="donate-item"><span class="donor">player_one</span><span class="amt">120k</span><span class="glint"></span></div>
+          <div class="donate-item"><span class="donor">phamlinh</span><span class="amt">70k</span><span class="glint"></span></div>
+          <div class="donate-item"><span class="donor">teemoMain</span><span class="amt">50k</span><span class="glint"></span></div>
+          <div class="donate-item"><span class="donor">skygamer</span><span class="amt">30k</span><span class="glint"></span></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- RIGHT: Client Game (borderless) -->
+    <section class="zone game tilt" data-depth="0.9" data-tilt="0.8" data-tilt-rot="2.4" data-tilt-x="1.8" data-tilt-y="1.8" data-speed="1.02" data-parallax="1">
+      <div class="panel-head">
+        <div class="pill">Client</div>
+        <div class="pill">Gameplay</div>
+      </div>
+
+      <div class="stage" id="stage">
+        <div class="mask"></div>
+        <div class="corner-wrap">
+          <div class="cf tl"></div>
+          <div class="cf tr"></div>
+          <div class="cf bl"></div>
+          <div class="cf br"></div>
+        </div>
+        <div class="sweep"></div>
+        <div class="streak s1"></div>
+        <div class="streak s2"></div>
+        <div class="streak s3"></div>
+
+        <div class="watermark" title="Darius">
+          <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="url(#g2)" stroke-width="8">
+            <defs>
+              <linearGradient id="g2" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#ffd36b"/>
+                <stop offset="1" stop-color="#ff2b45"/>
+              </linearGradient>
+            </defs>
+            <path d="M168 36c-8 18-30 30-48 28l-6 86-42 42c-8 8-8 22 0 30s22 8 30 0l42-42 86-6c-2-18 10-40 28-48-28-8-60 0-82 22l-24-24c22-22 30-54 22-82z" />
+            <circle cx="90" cy="192" r="6" fill="#ffd36b" stroke="none"/>
+          </svg>
         </div>
       </div>
-
-      <div class="info-cards">
-        <div class="card"><div class="label">Today Goal</div><div class="value">+150 LP</div></div>
-        <div class="card"><div class="label">Latest Follower</div><div class="value" id="last-follow">@summoner_123</div></div>
-        <div class="card"><div class="label">Music</div><div class="value">Lo-fi • 84 BPM</div></div>
-      </div>
-
-      <div class="game-tag">
-        <div class="chip">League of Legends</div>
-        <div class="chip">Patch 14.x</div>
-        <div class="chip">VN ➝ KR</div>
-      </div>
-    </main>
-
-    <!-- CHAT PANEL BÊN PHẢI -->
-    <aside class="chat" aria-live="polite">
-      <div class="head">
-        <div class="pill">Chat</div>
-        <div class="pill">Sub-only</div>
-        <div class="pill">Slow 3s</div>
-      </div>
-      <div class="body" id="chatBody">
-        <!-- Demo messages -->
-        <div class="msg"><div class="avatar"></div><div class="bubble"><div class="name">anhduong</div><div class="text">Chúc stream vui vẻ!</div></div></div>
-        <div class="msg"><div class="avatar"></div><div class="bubble"><div class="name">teemoMain</div><div class="text">Solo kill Morde cho em xem đi a.</div></div></div>
-        <div class="msg"><div class="avatar"></div><div class="bubble"><div class="name">phamlinh</div><div class="text">Âm nhạc chill quá.</div></div></div>
-      </div>
-    </aside>
-
-    <!-- FOOTER SOCIAL -->
-    <footer class="footer">
-      <div class="social">
-        <div class="item">
-          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M22.46 6c-.77.35-1.6.58-2.46.69a4.26 4.26 0 0 0 1.87-2.35 8.54 8.54 0 0 1-2.7 1.03 4.26 4.26 0 0 0-7.53 2.91c0 .33.03.65.1.95A12.1 12.1 0 0 1 3.15 4.7a4.26 4.26 0 0 0 1.32 5.68 4.22 4.22 0 0 1-1.93-.53v.05c0 2.06 1.47 3.77 3.41 4.16-.36.1-.75.16-1.14.16-.28 0-.55-.03-.82-.08.55 1.72 2.15 2.97 4.04 3a8.55 8.55 0 0 1-5.3 1.83c-.34 0-.67-.02-1-.06A12.08 12.08 0 0 0 8.29 21c7.55 0 11.68-6.26 11.68-11.68 0-.18 0-.36-.01-.53.8-.57 1.5-1.28 2.05-2.09z"/></svg>
-          <span>@tho_darius</span>
-        </div>
-        <div class="item">
-          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 8a8 8 0 0 1-9.5 7.9 5.5 5.5 0 0 0 4-1.8c-1.2 0-2.2-.8-2.5-1.9.3.1.6.1.9.1.4 0-.7-.1-1.2-.6a2.7 2.7 0 0 1-.8-2 2.6 2.6 0 0 0 1.2.3c-.7-.5-1.2-1.4-1.2-2.3 0-.5.1-1 .4-1.4a7.9 7.9 0 0 0 5.7 2.9 2.6 2.6 0 0 1 4.6-2.4c.8-.2 1.6-.4 2.3-.8-.3.8-.8 1.5-1.6 1.9.7-.1 1.4-.3 2-.6-.4.6-1 1.2-1.6 1.6z"/></svg>
-          <span>/thodarius</span>
-        </div>
-        <div class="item">
-          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 3H3a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10v-7H9v-3h4V8.5A4.5 4.5 0 0 1 17.5 4H21v3h-3.5A1.5 1.5 0 0 0 16 8.5V11h4l-1 3h-3v7h5a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"/></svg>
-          <span>fb.com/tho.darius</span>
-        </div>
-      </div>
-    </footer>
+    </section>
   </div>
 
   <script>
-    // ===== Particles nền nhẹ nhàng =====
-    const canvas = document.getElementById('particles');
-    const ctx = canvas.getContext('2d');
-    let w, h, DPR;
-    const particles = [];
-    function resize(){
-      DPR = Math.min(window.devicePixelRatio || 1, 2);
-      w = canvas.width = innerWidth * DPR;
-      h = canvas.height = innerHeight * DPR;
-    }
+    // ===== Dust particles =====
+    const cvs=document.getElementById('dust'), ctx=cvs.getContext('2d');
+    let W,H,DPR; function resize(){DPR=Math.min(devicePixelRatio||1,2); W=cvs.width=innerWidth*DPR; H=cvs.height=innerHeight*DPR;}
     window.addEventListener('resize', resize); resize();
-    for(let i=0;i<80;i++){
-      particles.push({
-        x: Math.random()*w,
-        y: Math.random()*h,
-        r: Math.random()*1.8 + .4,
-        vx: (Math.random()-.5)*.15,
-        vy: (Math.random()-.5)*.15,
-        a: Math.random()*Math.PI*2
+    const P=[]; for(let i=0;i<160;i++){P.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.8+.4,vx:(Math.random()-.5)*.12,vy:(Math.random()-.5)*.12})}
+    (function loop(){ctx.clearRect(0,0,W,H); ctx.globalAlpha=.9; for(const p of P){p.x+=p.vx; p.y+=p.vy; if(p.x<0)p.x=W; if(p.x>W)p.x=0; if(p.y<0)p.y=H; if(p.y>H)p.y=0;
+      const g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r*10); g.addColorStop(0,'rgba(255,211,107,.35)'); g.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.fillStyle=g; ctx.beginPath(); ctx.arc(p.x,p.y,p.r*10,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='rgba(255,255,255,.35)'; ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill(); } requestAnimationFrame(loop)})();
+
+    // ===== Donate highlight cycle =====
+    (function(){ const items=[...document.querySelectorAll('.donate-item')]; if(!items.length) return;
+      let i=0; setInterval(()=>{ items.forEach((el,idx)=>{
+        const active=idx===i;
+        el.style.outline = active ? '2px solid var(--gold)' : '1px solid #3a4aa0';
+        el.style.boxShadow = active ? '0 0 32px #ffd36b66, 0 18px 42px #000a' : '0 18px 42px #000a';
+        if(active){ el.animate([{transform:'translateY(0)'},{transform:'translateY(-4px)'},{transform:'translateY(0)'}],{duration:700,easing:'ease-out'}); }
+      }); i=(i+1)%items.length; }, 2400);
+    })();
+
+    // ===== YouTube chat via data attributes =====
+    (function(){ const box=document.getElementById('ytChat'); const holder=document.querySelector('.chat'); if(!box||!holder) return;
+      const vid=(holder.dataset.videoId||'').trim(); const domain=(holder.dataset.embedDomain||'').trim();
+      if(vid && domain){ box.src=`https://www.youtube.com/live_chat?v=${vid}&embed_domain=${domain}`; } else { box.src=''; }
+    })();
+
+    // ===== Hooks =====
+    window.flashDonate = (name, amt)=>{
+      const box=document.querySelector('.donate');
+      const pulse=document.createElement('div');
+      pulse.style.position='absolute'; pulse.style.inset='0'; pulse.style.borderRadius='28px';
+      pulse.style.background='radial-gradient(circle at 50% 50%, rgba(255,211,107,.35), transparent 60%)';
+      pulse.style.pointerEvents='none';
+      box.appendChild(pulse);
+      pulse.animate([{opacity:0},{opacity:1,offset:.3},{opacity:0}],{duration:1200,easing:'ease-out'}).onfinish=()=>pulse.remove();
+      const list=document.getElementById('donateList');
+      const item=document.createElement('div'); item.className='donate-item';
+      item.innerHTML=`<span class="donor">${name}</span><span class="amt">${amt}</span><span class="glint"></span>`;
+      list.prepend(item);
+    };
+
+    // ===== Parallax tilt per zone =====
+    const tilts=[...document.querySelectorAll('.tilt')];
+    document.addEventListener('mousemove', (e)=>{
+      const cx=innerWidth/2, cy=innerHeight/2; const dx=(e.clientX-cx)/cx, dy=(e.clientY-cy)/cy;
+      tilts.forEach(el=>{
+        const depth=parseFloat(el.dataset.depth||1);
+        const rot=parseFloat(el.dataset.tiltRot||3);
+        const tx=parseFloat(el.dataset.tiltX||2);
+        const ty=parseFloat(el.dataset.tiltY||2);
+        el.style.transform=`perspective(1200px) rotateY(${dx*rot*depth}deg) rotateX(${ -dy*rot*depth}deg) translate3d(${dx*tx*depth}px, ${dy*ty*depth}px, 0)`;
       });
-    }
-    function tick(){
-      ctx.clearRect(0,0,w,h);
-      ctx.globalAlpha = .9;
-      for(const p of particles){
-        p.x+=p.vx; p.y+=p.vy; p.a+=.005;
-        if(p.x<0) p.x=w; if(p.x>w) p.x=0; if(p.y<0) p.y=h; if(p.y>h) p.y=0;
-        const glow = ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r*8);
-        glow.addColorStop(0,'rgba(77,208,255,.35)');
-        glow.addColorStop(1,'rgba(0,0,0,0)');
-        ctx.fillStyle = glow;
-        ctx.beginPath(); ctx.arc(p.x,p.y,p.r*8,0,Math.PI*2); ctx.fill();
-        ctx.fillStyle = 'rgba(255,255,255,.35)';
-        ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
-      }
-      requestAnimationFrame(tick);
-    }
-    tick();
-
-    // ===== Demo: đẩy tin nhắn giả vào chat cho preview =====
-    const demoMsgs = [
-      ['kaito','Darius full tank có ổn không a?'],
-      ['thuyngoc','Đẩy trụ đi a ơi!'],
-      ['skygamer','Nice hook từ Nautilus!'],
-      ['wibu99','Clip này lên tiktok nhé.'],
-    ];
-    const chatBody = document.getElementById('chatBody');
-    setInterval(()=>{
-      const [name, text] = demoMsgs[Math.floor(Math.random()*demoMsgs.length)];
-      const node = document.createElement('div');
-      node.className = 'msg';
-      node.innerHTML = `<div class="avatar"></div><div class="bubble"><div class="name">${name}</div><div class="text">${text}</div></div>`;
-      chatBody.appendChild(node);
-      chatBody.scrollTop = chatBody.scrollHeight;
-    }, 2800);
-
-    // ===== Gợi ý: thay webcam bằng stream thật khi cần =====
-    // Ví dụ nhúng webcam thực tế:
-    // const video = document.createElement('video');
-    // video.autoplay = true; video.playsInline = true; video.muted = true;
-    // navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 640 } })
-    //   .then(stream => { video.srcObject = stream; document.getElementById('webcam').appendChild(video); })
-    //   .catch(console.error);
+    });
   </script>
 </body>
 </html>
