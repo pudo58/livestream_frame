@@ -52,11 +52,6 @@ async function getDonatorRanks() {
     }
 }
 
-function formatK(amount) {
-    if (typeof amount !== 'number') return '';
-    return Math.round(amount / 1000) + 'k';
-}
-
 function renderDonations(ranks) {
     const donateList = document.getElementById('donateList');
     donateList.innerHTML = '';
