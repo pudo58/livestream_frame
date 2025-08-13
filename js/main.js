@@ -53,8 +53,10 @@ async function getDonatorRanks() {
 }
 
 function formatK(amount) {
-    if (typeof amount !== 'number') return '';
-    return Math.round(amount / 1000) + 'k';
+    // API có thể trả về chuỗi; cố gắng chuyển sang số trước khi xử lý
+    const num = typeof amount === 'number' ? amount : parseFloat(amount);
+    if (isNaN(num)) return '';
+    return Math.round(num / 1000) + 'k';
 }
 
 function renderDonations(ranks) {
