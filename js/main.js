@@ -1,4 +1,7 @@
 const apiAuthUrl = 'https://api.wescan.vn/api/v1/users/login/anonymous';
+// In production, this URL or any static tokens should be stored in an environment
+// variable or accessed via a server-side proxy endpoint to avoid exposing them
+// directly in client-side code.
 let data = {};
 
 async function loginAnonymous() {
@@ -17,7 +20,9 @@ async function loginAnonymous() {
         if (!response.ok) throw new Error(`HTTP Error! status: ${response.status}`);
 
         data = await response.json();
-        console.log('Token:', data?.data?.token);
+        // Token được giữ trong bộ nhớ và không in ra console để tránh lộ lọt.
+        // Nếu cần sử dụng token cố định, hãy lấy nó từ biến môi trường hoặc
+        // thông qua endpoint proxy bảo mật trên server.
 
         // Chỉ gọi khi login xong
         await getDonatorRanks();
