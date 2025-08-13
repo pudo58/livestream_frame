@@ -1,54 +1,87 @@
 const apiAuthUrl = 'https://api.wescan.vn/api/v1/users/login/anonymous';
 let data = {};
 
-async function loginAnonymous() {
-    try {
-        const response = await fetch(apiAuthUrl, {
-            method: 'POST',
-            headers: {
-                'accept': 'application/json, text/plain, */*',
-                'accept-language': 'en-US,en;q=0.9,vi;q=0.8',
-                'origin': 'https://stream.wescan.vn',
-                'referer': 'https://stream.wescan.vn/'
-            },
-            body: null
-        });
+async function loginAnonymous(retries = 3) {
+    const errorDiv = document.getElementById('errorMessage');
+    for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+            const response = await fetch(apiAuthUrl, {
+                method: 'POST',
+                headers: {
+                    'accept': 'application/json, text/plain, */*',
+                    'accept-language': 'en-US,en;q=0.9,vi;q=0.8',
+                    'origin': 'https://stream.wescan.vn',
+                    'referer': 'https://stream.wescan.vn/'
+                },
+                body: null
+            });
 
-        if (!response.ok) throw new Error(`HTTP Error! status: ${response.status}`);
+            if (!response.ok) throw new Error(`HTTP Error! status: ${response.status}`);
 
-        data = await response.json();
-        console.log('Token:', data?.data?.token);
+            data = await response.json();
+            console.log('Token:', data?.data?.token);
 
-        // Chỉ gọi khi login xong
-        await getDonatorRanks();
-    } catch (error) {
-        console.error('Lỗi login:', error);
+            if (errorDiv) {
+                errorDiv.textContent = '';
+                errorDiv.style.display = 'none';
+            }
+
+            // Chỉ gọi khi login xong
+            await getDonatorRanks();
+            return;
+        } catch (error) {
+            console.error('Lỗi login:', error);
+            if (errorDiv) {
+                errorDiv.textContent = `Lỗi login: ${error.message}` + (attempt < retries ? ` - thử lại (${attempt}/${retries})` : '');
+                errorDiv.style.display = 'block';
+            }
+            if (attempt < retries) {
+                await new Promise(r => setTimeout(r, 1000));
+            }
+        }
     }
 }
 
-async function getDonatorRanks() {
-    try {
-        const now = new Date();
-        const formattedDate = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')}`;
-        const url = `https://api.wescan.vn/api/v1/donator_ranks?user_id=ce760a6986b0449fa321c1df6400fd5a&sort_by=base_price&sort_type=desc&limit=100&min_donate=4900&to_date=${encodeURIComponent(formattedDate)}`;
+async function getDonatorRanks(retries = 3) {
+    const errorDiv = document.getElementById('errorMessage');
+    for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+            const now = new Date();
+            const formattedDate = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')}`;
+            const url = `https://api.wescan.vn/api/v1/donator_ranks?user_id=ce760a6986b0449fa321c1df6400fd5a&sort_by=base_price&sort_type=desc&limit=100&min_donate=4900&to_date=${encodeURIComponent(formattedDate)}`;
 
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'accept': 'application/json, text/plain, */*',
-                'authorization': data?.data?.token, // lấy token sau khi login
-                'origin': 'https://stream.wescan.vn',
-                'referer': 'https://stream.wescan.vn/'
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'accept': 'application/json, text/plain, */*',
+                    'authorization': data?.data?.token, // lấy token sau khi login
+                    'origin': 'https://stream.wescan.vn',
+                    'referer': 'https://stream.wescan.vn/'
+                }
+            });
+
+            if (!response.ok) throw new Error(`HTTP Error! status: ${response.status}`);
+
+            const json = await response.json();
+            const ranks = json?.data?.items?.[0]?.ranks || [];
+
+            if (errorDiv) {
+                errorDiv.textContent = '';
+                errorDiv.style.display = 'none';
             }
-        });
 
-        if (!response.ok) throw new Error(`HTTP Error! status: ${response.status}`);
-
-        const json = await response.json();
-        const ranks = json?.data?.items?.[0]?.ranks || [];
-        renderDonations(ranks);
-    } catch (error) {
-        console.error('Lỗi getDonatorRanks:', error);
+            renderDonations(ranks);
+            return;
+        } catch (error) {
+            console.error('Lỗi getDonatorRanks:', error);
+            if (errorDiv) {
+                errorDiv.textContent = `Lỗi getDonatorRanks: ${error.message}` + (attempt < retries ? ` - thử lại (${attempt}/${retries})` : '');
+                errorDiv.style.display = 'block';
+            }
+            if (attempt < retries) {
+                await new Promise(r => setTimeout(r, 1000));
+            }
+        }
     }
 }
 
