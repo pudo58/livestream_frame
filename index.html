@@ -3,10 +3,509 @@
 
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>THO DARIUS — LoL Stream Overlay</title>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/overlay.css">
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>THO DARIUS — Noxus Overlay</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0a0605;
+            --bg-mid: #1a0f0c;
+            --red: #c41e1e;
+            --red-bright: #e63946;
+            --gold: #d4af37;
+            --gold-light: #f4d47c;
+            --text: #ece4d4;
+            --text-muted: #b8a888;
+            --border-glow: 0 0 14px rgba(212, 175, 55, 0.22), 0 0 4px rgba(212, 175, 55, 0.35);
+            --panel-bg: linear-gradient(155deg, rgba(26, 15, 12, 0.96) 0%, rgba(10, 6, 5, 0.94) 100%);
+            --sidebar-w: 360px;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html, body {
+            width: 1920px;
+            height: 1080px;
+            overflow: hidden;
+            background: transparent;
+        }
+
+        body {
+            color: var(--text);
+            font-family: "Rajdhani", system-ui, sans-serif;
+            font-size: 16px;
+        }
+
+        /* Unified Noxus panel border */
+        .noxus-panel {
+            border: 2px solid transparent;
+            background:
+                var(--panel-bg) padding-box,
+                linear-gradient(135deg, var(--gold-light), var(--gold), #8b6914, var(--gold-light)) border-box;
+            box-shadow: var(--border-glow), inset 0 1px 0 rgba(244, 212, 124, 0.06);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .noxus-panel::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0.045;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+        }
+
+        /* Ember particles (dark UI zones only) */
+        .embers {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .ember {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            border-radius: 50%;
+            background: var(--red-bright);
+            box-shadow: 0 0 6px var(--red), 0 0 12px rgba(230, 57, 70, 0.5);
+            opacity: 0;
+            animation: ember-rise linear infinite;
+        }
+
+        @keyframes ember-rise {
+            0%   { opacity: 0; transform: translateY(0) scale(1); }
+            10%  { opacity: 0.85; }
+            90%  { opacity: 0.4; }
+            100% { opacity: 0; transform: translateY(-120px) scale(0.3); }
+        }
+
+        .wrap {
+            position: relative;
+            z-index: 1;
+            width: 1920px;
+            height: 1080px;
+            padding: 20px;
+            display: grid;
+            gap: 14px;
+            grid-template-columns: var(--sidebar-w) 1fr;
+            grid-template-rows: 76px 46px 1fr;
+            background: transparent;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            grid-column: 1 / -1;
+            grid-row: 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 20px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .avatar {
+            width: 52px;
+            height: 52px;
+            border-radius: 4px;
+            object-fit: cover;
+            border: 2px solid var(--gold);
+            box-shadow: 0 0 16px rgba(212, 175, 55, 0.45), 0 0 32px rgba(212, 175, 55, 0.15);
+            flex-shrink: 0;
+        }
+
+        .title-block .name {
+            font-family: "Cinzel Decorative", serif;
+            font-size: 34px;
+            font-weight: 900;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            line-height: 1.05;
+            background: linear-gradient(95deg, var(--red-bright) 0%, var(--gold-light) 55%, var(--gold) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            filter: drop-shadow(0 2px 8px rgba(196, 30, 30, 0.5));
+            text-shadow: none;
+        }
+
+        .meta {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            margin-top: 6px;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-muted);
+            letter-spacing: 0.3px;
+        }
+
+        .meta .sep { color: rgba(184, 168, 136, 0.35); }
+
+        .rank-emblem {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .rank-emblem svg {
+            width: 16px;
+            height: 16px;
+            color: var(--gold-light);
+            filter: drop-shadow(0 0 4px rgba(212, 175, 55, 0.5));
+        }
+
+        /* ===== LIVE BADGE ===== */
+        .live {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, var(--red) 0%, var(--red-bright) 100%);
+            color: #fff;
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            animation: live-glow 2s ease-in-out infinite;
+        }
+
+        @keyframes live-glow {
+            0%, 100% {
+                box-shadow: 0 0 12px rgba(196, 30, 30, 0.7), 0 0 28px rgba(230, 57, 70, 0.45), inset 0 1px 0 rgba(255,255,255,0.15);
+            }
+            50% {
+                box-shadow: 0 0 22px rgba(196, 30, 30, 1), 0 0 56px rgba(230, 57, 70, 0.75), inset 0 1px 0 rgba(255,255,255,0.25);
+            }
+        }
+
+        .live-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #fff;
+            box-shadow: 0 0 8px #fff, 0 0 16px rgba(255,255,255,0.8);
+            animation: dot-blink 1s ease-in-out infinite;
+        }
+
+        @keyframes dot-blink {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.35; transform: scale(0.85); }
+        }
+
+        /* ===== TICKER ===== */
+        .ticker-bar {
+            grid-column: 1 / -1;
+            grid-row: 2;
+            display: flex;
+            align-items: stretch;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .ticker-label {
+            display: flex;
+            align-items: center;
+            padding: 0 18px;
+            background: linear-gradient(180deg, var(--red) 0%, #8b1515 100%);
+            color: #fff;
+            font-family: "Cinzel Decorative", serif;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            flex-shrink: 0;
+            border-right: 2px solid var(--gold);
+            box-shadow: 4px 0 16px rgba(0,0,0,0.4);
+        }
+
+        .ticker-sep {
+            display: none;
+        }
+
+        .ticker-track {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            padding: 0 8px;
+            mask-image: linear-gradient(90deg, transparent 0%, #000 6%, #000 94%, transparent 100%);
+            -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 6%, #000 94%, transparent 100%);
+        }
+
+        .ticker-content {
+            display: flex;
+            gap: 64px;
+            white-space: nowrap;
+            animation: ticker-scroll 32s linear infinite;
+        }
+
+        .ticker-content span {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+        }
+
+        @keyframes ticker-scroll {
+            to { transform: translateX(-50%); }
+        }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            grid-column: 1;
+            grid-row: 3;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            min-height: 0;
+        }
+
+        .panel {
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .panel.chat { flex: 1; }
+
+        .panel.donate {
+            height: 260px;
+            flex-shrink: 0;
+        }
+
+        .panel-head {
+            position: relative;
+            z-index: 1;
+            padding: 10px 16px;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.18);
+            background: rgba(0, 0, 0, 0.25);
+        }
+
+        .panel-title {
+            font-family: "Cinzel Decorative", serif;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--gold-light);
+        }
+
+        .chat iframe {
+            position: relative;
+            z-index: 1;
+            flex: 1;
+            width: 100%;
+            border: 0;
+            background: rgba(10, 6, 5, 0.85);
+            min-height: 0;
+        }
+
+        /* ===== DONATE ===== */
+        .donate-list {
+            position: relative;
+            z-index: 1;
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .donate-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            background: linear-gradient(90deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+            border: 1px solid rgba(212, 175, 55, 0.12);
+            transition: border-color 0.25s, box-shadow 0.25s;
+        }
+
+        .donate-item.highlight {
+            border-color: rgba(212, 175, 55, 0.45);
+            box-shadow: 0 0 12px rgba(212, 175, 55, 0.15);
+        }
+
+        .donate-item.top-1 {
+            background: linear-gradient(90deg, rgba(196, 30, 30, 0.12) 0%, rgba(255,255,255,0.02) 100%);
+            border-color: rgba(212, 175, 55, 0.35);
+        }
+
+        .medal {
+            width: 30px;
+            height: 34px;
+            flex-shrink: 0;
+            display: grid;
+            place-items: center;
+            font-size: 13px;
+            font-weight: 700;
+            clip-path: polygon(50% 0%, 95% 30%, 78% 100%, 22% 100%, 5% 30%);
+            color: #1a0f0c;
+        }
+
+        .medal.gold {
+            background: linear-gradient(180deg, var(--gold-light) 0%, var(--gold) 50%, #8b6914 100%);
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+        }
+
+        .medal.silver {
+            background: linear-gradient(180deg, #d4cfc4 0%, #9a9590 50%, #6a6560 100%);
+        }
+
+        .medal.bronze {
+            background: linear-gradient(180deg, #c87533 0%, #8b4513 50%, #5c2d0e 100%);
+            color: #fff;
+        }
+
+        .medal.normal {
+            background: linear-gradient(180deg, #3a2a22 0%, #2a1a15 100%);
+            color: var(--text-muted);
+            clip-path: none;
+            border-radius: 4px;
+            width: 28px;
+            height: 28px;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+        }
+
+        .donor {
+            flex: 1;
+            min-width: 0;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .amt {
+            font-family: "Rajdhani", sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: var(--gold-light);
+            flex-shrink: 0;
+            text-shadow: 0 0 12px rgba(244, 212, 124, 0.25);
+        }
+
+        .donate-empty {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            font-size: 15px;
+            color: var(--text-muted);
+        }
+
+        /* ===== GAME AREA (transparent) ===== */
+        .game-area {
+            grid-column: 2;
+            grid-row: 3;
+            min-height: 0;
+            min-width: 0;
+            background: transparent;
+        }
+
+        .game-frame {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+        }
+
+        /* Edge vignette — avoids flat border feel */
+        .game-frame::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 1;
+            background: radial-gradient(ellipse 90% 85% at 50% 50%, transparent 50%, rgba(10, 6, 5, 0.28) 100%);
+        }
+
+        /* Corner brackets — inset to clear LoL minimap (BR) & HUD (bottom) */
+        .frame-corner {
+            position: absolute;
+            width: 36px;
+            height: 36px;
+            z-index: 3;
+            pointer-events: none;
+        }
+
+        .frame-corner::before,
+        .frame-corner::after {
+            content: "";
+            position: absolute;
+            background: linear-gradient(90deg, var(--gold-light), var(--gold));
+            box-shadow: 0 0 8px rgba(212, 175, 55, 0.4);
+        }
+
+        .frame-corner.tl { top: 14px; left: 14px; }
+        .frame-corner.tl::before { top: 0; left: 0; width: 28px; height: 2px; }
+        .frame-corner.tl::after  { top: 0; left: 0; width: 2px; height: 28px; }
+
+        .frame-corner.tr { top: 14px; right: 14px; }
+        .frame-corner.tr::before { top: 0; right: 0; width: 28px; height: 2px; }
+        .frame-corner.tr::after  { top: 0; right: 0; width: 2px; height: 28px; }
+
+        /* Bottom-left: raised above skill bar (~110px) */
+        .frame-corner.bl { bottom: 110px; left: 14px; }
+        .frame-corner.bl::before { bottom: 0; left: 0; width: 28px; height: 2px; }
+        .frame-corner.bl::after  { bottom: 0; left: 0; width: 2px; height: 28px; }
+
+        /* Bottom-right: inset to clear minimap (~270px from edges) */
+        .frame-corner.br { bottom: 270px; right: 270px; }
+        .frame-corner.br::before { bottom: 0; right: 0; width: 28px; height: 2px; }
+        .frame-corner.br::after  { bottom: 0; right: 0; width: 2px; height: 28px; }
+
+        .stage {
+            position: absolute;
+            inset: 0;
+            background: transparent;
+            z-index: 0;
+        }
+
+        /* Noxus axe watermark — decorative, away from minimap */
+        .watermark {
+            position: absolute;
+            top: 24px;
+            left: 24px;
+            width: 110px;
+            z-index: 2;
+            pointer-events: none;
+            opacity: 0.065;
+            color: var(--gold);
+        }
+
+        .watermark svg { display: block; width: 100%; }
+
+        .noxus-seal {
+            position: absolute;
+            bottom: 120px;
+            right: 290px;
+            width: 90px;
+            z-index: 2;
+            pointer-events: none;
+            opacity: 0.06;
+            color: var(--red-bright);
+        }
+
+        .noxus-seal svg { display: block; width: 100%; }
+    </style>
 </head>
 
 <body>
@@ -28,27 +527,25 @@
     }
     </script>
 
-    <div class="vignette" aria-hidden="true"></div>
-
     <div class="wrap">
-        <header class="header">
+        <header class="header noxus-panel">
+            <div class="embers" aria-hidden="true"></div>
             <div class="brand">
-                <div class="crest" aria-hidden="true">
-                    <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M42 8c-2 5-8 8-13 7l-2 24-12 12c-2 2-2 6 0 8s6 2 8 0l12-12 24-2c-1-5 3-10 8-13-8-2-17 0-23 6l-7-7c6-6 8-15 6-23z" fill="currentColor"/>
-                    </svg>
-                </div>
-                <div class="title">
+                <img class="avatar" src="image/icon.png" alt="THO DARIUS" width="52" height="52" />
+                <div class="title-block">
                     <h1 class="name" id="streamerName">THO DARIUS</h1>
                     <p class="meta">
                         <span id="streamerTagline">Hand of Noxus</span>
-                        <span class="dot-sep">•</span>
+                        <span class="sep">•</span>
                         <span id="champBadge">Darius Main</span>
-                        <span class="dot-sep">•</span>
+                        <span class="sep">•</span>
                         <span id="roleBadge">Top</span>
-                        <span class="dot-sep">•</span>
-                        <span id="rankBadge">Diamond II</span>
-                        <span class="dot-sep">•</span>
+                        <span class="sep">•</span>
+                        <span class="rank-emblem">
+                            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.5 7.5H22l-6 4.5 2.5 7.5L12 17l-6.5 4.5 2.5-7.5-6-4.5h7.5z"/></svg>
+                            <span id="rankBadge">Diamond II</span>
+                        </span>
+                        <span class="sep">•</span>
                         <span id="winRateBadge">58% WR</span>
                     </p>
                 </div>
@@ -59,29 +556,29 @@
             </div>
         </header>
 
-        <div class="ticker-bar">
-            <span class="ticker-label">NOXUS</span>
+        <div class="ticker-bar noxus-panel">
+            <div class="ticker-label">NOXUS</div>
             <div class="ticker-track">
                 <div class="ticker-content" id="tickerContent"></div>
             </div>
         </div>
 
         <aside class="sidebar">
-            <section class="panel chat" data-video-id="">
+            <section class="panel chat noxus-panel" data-video-id="">
+                <div class="embers" aria-hidden="true"></div>
                 <div class="panel-head">
                     <span class="panel-title">YouTube Chat</span>
                 </div>
                 <iframe id="ytChat" frameborder="0" allowfullscreen title="YouTube Live Chat"></iframe>
             </section>
 
-            <section class="panel donate">
+            <section class="panel donate noxus-panel">
+                <div class="embers" aria-hidden="true"></div>
                 <div class="panel-head">
                     <span class="panel-title">Top Donate</span>
                 </div>
                 <div class="donate-list" id="donateList">
-                    <div class="donate-empty" id="donateEmpty">
-                        <span>Chưa có donate hôm nay</span>
-                    </div>
+                    <div class="donate-empty">Chưa có donate hôm nay</div>
                 </div>
             </section>
         </aside>
@@ -94,8 +591,13 @@
                 <div class="frame-corner br"></div>
                 <div class="stage" id="stage">
                     <div class="watermark" aria-hidden="true">
-                        <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="6">
+                        <svg viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="8">
                             <path d="M168 36c-8 18-30 30-48 28l-6 86-42 42c-8 8-8 22 0 30s22 8 30 0l42-42 86-6c-2-18 10-40 28-48-28-8-60 0-82 22l-24-24c22-22 30-54 22-82z"/>
+                        </svg>
+                    </div>
+                    <div class="noxus-seal" aria-hidden="true">
+                        <svg viewBox="0 0 100 100" fill="currentColor">
+                            <path d="M50 5 L62 38 L95 38 L68 58 L78 92 L50 72 L22 92 L32 58 L5 38 L38 38 Z"/>
                         </svg>
                     </div>
                 </div>
@@ -104,7 +606,59 @@
     </div>
 
     <script src="js/main.js"></script>
-    <script src="js/overlay.js" defer></script>
+    <script>
+        (function () {
+            function loadConfig() {
+                try { return JSON.parse(document.getElementById('overlay-config').textContent); }
+                catch { return {}; }
+            }
+            const cfg = loadConfig();
+            const set = (id, v) => { const el = document.getElementById(id); if (el && v) el.textContent = v; };
+            set('streamerName', cfg.streamer);
+            set('streamerTagline', cfg.tagline);
+            set('champBadge', cfg.mainChamp ? cfg.mainChamp + ' Main' : null);
+            set('roleBadge', cfg.role);
+            set('rankBadge', cfg.rank);
+            if (cfg.winRate) set('winRateBadge', cfg.winRate + ' WR');
+
+            const ticker = document.getElementById('tickerContent');
+            if (ticker && cfg.ticker?.length) {
+                const html = cfg.ticker.map(t => '<span>' + t + '</span>').join('');
+                ticker.innerHTML = html + html;
+            }
+
+            const chat = document.querySelector('.panel.chat');
+            const iframe = document.getElementById('ytChat');
+            if (chat && iframe) {
+                const host = location.hostname || 'localhost';
+                const vid = (chat.dataset.videoId || new URLSearchParams(location.search).get('v') || '').trim();
+                if (vid) iframe.src = 'https://www.youtube.com/live_chat?v=' + vid + '&embed_domain=' + host + '&dark_theme=1';
+            }
+
+            document.querySelectorAll('.embers').forEach(container => {
+                for (let i = 0; i < 6; i++) {
+                    const e = document.createElement('span');
+                    e.className = 'ember';
+                    e.style.left = (10 + Math.random() * 80) + '%';
+                    e.style.bottom = (Math.random() * 30) + 'px';
+                    e.style.animationDuration = (4 + Math.random() * 5) + 's';
+                    e.style.animationDelay = (Math.random() * 6) + 's';
+                    container.appendChild(e);
+                }
+            });
+
+            window.initDonateHighlight = function () {
+                const items = [...document.querySelectorAll('.donate-item')];
+                if (!items.length) return;
+                let i = 0;
+                if (window._donateTimer) clearInterval(window._donateTimer);
+                window._donateTimer = setInterval(() => {
+                    items.forEach((el, idx) => el.classList.toggle('highlight', idx === i));
+                    i = (i + 1) % items.length;
+                }, 3000);
+            };
+        })();
+    </script>
 </body>
 
 </html>

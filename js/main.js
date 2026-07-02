@@ -23,8 +23,7 @@ async function loginAnonymous() {
             body: null
         });
 
-        if (!response.ok) throw new Error(`HTTP Error! status: ${response.status}`);
-
+        if (!response.ok) throw new Error('HTTP ' + response.status);
         data = await response.json();
         await getDonatorRanks();
     } catch (error) {
@@ -48,22 +47,18 @@ async function getDonatorRanks() {
             }
         });
 
-        if (!response.ok) throw new Error(`HTTP Error! status: ${response.status}`);
-
+        if (!response.ok) throw new Error('HTTP ' + response.status);
         const json = await response.json();
-        const ranks = json?.data?.items?.[0]?.ranks || [];
-        renderDonations(ranks);
+        renderDonations(json?.data?.items?.[0]?.ranks || []);
     } catch (error) {
         console.error('Lỗi getDonatorRanks:', error);
     }
 }
 
-function formatK(amount) {
-    const num = typeof amount === 'number' ? amount : parseFloat(amount);
+function formatVND(amount) {
+    const num = typeof amount === 'number' ? amount : parseFloat(String(amount).replace(/[^\d.-]/g, ''));
     if (isNaN(num)) return '';
-    if (num >= 1000000) return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
-    if (num >= 1000) return Math.round(num / 1000) + 'k';
-    return num.toLocaleString('vi-VN') + 'đ';
+    return Math.round(num).toLocaleString('vi-VN') + 'đ';
 }
 
 function medalClass(index) {
@@ -75,27 +70,19 @@ function medalClass(index) {
 
 function renderDonations(ranks) {
     const donateList = document.getElementById('donateList');
-
     if (!ranks.length) {
-        donateList.innerHTML = `
-            <div class="donate-empty" id="donateEmpty">
-                <svg viewBox="0 0 48 48" width="36" height="36" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M24 4l4 8h8l-6 6 2 8-8-5-8 5 2-8-6-6h8z"/>
-                </svg>
-                <span>Chưa có donate hôm nay</span>
-            </div>`;
+        donateList.innerHTML = '<div class="donate-empty">Chưa có donate hôm nay</div>';
         return;
     }
 
     donateList.innerHTML = '';
-
     ranks.forEach((r, i) => {
         const div = document.createElement('div');
         div.className = 'donate-item' + (i === 0 ? ' top-1' : '');
 
         const medal = document.createElement('span');
-        medal.className = `rank-medal ${medalClass(i)}`;
-        medal.textContent = i + 1;
+        medal.className = 'medal ' + medalClass(i);
+        medal.textContent = i < 3 ? (i + 1) : (i + 1);
 
         const donor = document.createElement('span');
         donor.className = 'donor';
@@ -103,12 +90,11 @@ function renderDonations(ranks) {
 
         const amt = document.createElement('span');
         amt.className = 'amt';
-        amt.textContent = formatK(r.amount);
+        amt.textContent = formatVND(r.amount);
 
         div.appendChild(medal);
         div.appendChild(donor);
         div.appendChild(amt);
-
         donateList.appendChild(div);
     });
 
