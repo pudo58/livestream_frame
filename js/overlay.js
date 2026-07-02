@@ -1,3 +1,33 @@
+// ===== Overlay config =====
+function loadConfig() {
+    try {
+        const el = document.getElementById('overlay-config');
+        return el ? JSON.parse(el.textContent) : {};
+    } catch {
+        return {};
+    }
+}
+
+const CONFIG = loadConfig();
+
+function applyConfig() {
+    const set = (id, val) => { const el = document.getElementById(id); if (el && val) el.textContent = val; };
+    set('streamerName', CONFIG.streamer);
+    set('streamerTagline', CONFIG.tagline);
+    set('roleBadge', CONFIG.role);
+    set('champBadge', CONFIG.mainChamp ? `${CONFIG.mainChamp} Main` : null);
+    set('rankBadge', CONFIG.rank);
+    if (CONFIG.winRate) set('winRateBadge', `${CONFIG.winRate} WR`);
+
+    const ticker = document.getElementById('tickerContent');
+    if (ticker && CONFIG.ticker?.length) {
+        const items = CONFIG.ticker.map(t => `<span>${t}</span>`).join('');
+        ticker.innerHTML = items + items;
+    }
+}
+
+applyConfig();
+
 // Dust particles
 const dust = document.getElementById('dust'), dtx = dust.getContext('2d');
 let W, H, DPR; function fit() { DPR = Math.min(devicePixelRatio || 1, 2); W = dust.width = innerWidth * DPR; H = dust.height = innerHeight * DPR; }
@@ -24,17 +54,22 @@ const B = []; for (let i = 0; i < 40; i++) { B.push({ x: Math.random() * W, y: M
 })();
 
 // Donate highlight cycle
-(function () {
-    const items = [...document.querySelectorAll('.donate-item')]; if (!items.length) return;
-    let i = 0; setInterval(() => {
+window.initDonateHighlight = function () {
+    const items = [...document.querySelectorAll('.donate-item')];
+    if (!items.length) return;
+    let i = 0;
+    if (window._donateHighlightTimer) clearInterval(window._donateHighlightTimer);
+    window._donateHighlightTimer = setInterval(() => {
         items.forEach((el, idx) => {
             const active = idx === i;
-            el.style.outline = active ? '2px solid var(--gold)' : '1px solid #3a4aa0';
+            el.style.outline = active ? '2px solid var(--gold)' : '';
             el.style.boxShadow = active ? '0 0 36px #ffd36b66, 0 18px 48px #000a' : '0 18px 48px #000a';
             if (active) { el.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-4px)' }, { transform: 'translateY(0)' }], { duration: 720, easing: 'ease-out' }); }
-        }); i = (i + 1) % items.length;
+        });
+        i = (i + 1) % items.length;
     }, 2400);
-})();
+};
+window.initDonateHighlight();
 
 (function () {
     const zone = document.querySelector('.zone.chat');
@@ -42,13 +77,11 @@ const B = []; for (let i = 0; i < 40; i++) { B.push({ x: Math.random() * W, y: M
     if (!zone || !iframe) return;
 
     const host = location.hostname || 'localhost';
-    // Ưu tiên data-video-id; nếu không có, lấy ?v=... trên URL trang
     const vid = (zone.dataset.videoId || new URLSearchParams(location.search).get('v') || '').trim();
-    
+
     if (vid) {
         iframe.src = `https://www.youtube.com/live_chat?v=${vid}&embed_domain=${host}&dark_theme=1`;
     } else {
-        // chưa có videoId -> để trống để nhìn thấy nền, không lỗi
         iframe.removeAttribute('src');
     }
 })();
@@ -65,4 +98,3 @@ document.addEventListener('mousemove', (e) => {
         el.style.transform = `perspective(1200px) rotateY(${dx * rot * depth}deg) rotateX(${-dy * rot * depth}deg) translate3d(${dx * tx * depth}px, ${dy * ty * depth}px, 0)`;
     });
 });
-
