@@ -4,13 +4,33 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LOL Overlay – Darius Red & Gold 3D • Ultra Premium (Corner Glow)</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Plus+Jakarta+Sans:wght@400;800&display=swap" rel="stylesheet">
+    <title>THO DARIUS — LoL Stream Overlay</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
     <link rel="stylesheet" href="css/overlay.css">
 </head>
 
 <body>
+    <!-- Cấu hình overlay — chỉnh tại đây -->
+    <script id="overlay-config" type="application/json">
+    {
+        "streamer": "THO DARIUS",
+        "tagline": "Hand of Noxus",
+        "rank": "Diamond II",
+        "role": "Top",
+        "mainChamp": "Darius",
+        "winRate": "58%",
+        "lp": "47 LP",
+        "ticker": [
+            "Main Darius • Top Lane",
+            "Hand of Noxus • Noxus Will Rise",
+            "Follow để không bỏ lỡ pentakill",
+            "Donate qua Super Chat hoặc chuyển khoản"
+        ],
+        "donateRefreshMs": 300000
+    }
+    </script>
+
     <!-- Background layers -->
     <div class="aurora" aria-hidden="true">
         <div class="a r"></div>
@@ -20,39 +40,74 @@
     <canvas id="dust"></canvas>
     <canvas id="bokeh"></canvas>
     <div class="grid" aria-hidden="true"></div>
+    <div class="noxus-emblem" aria-hidden="true"></div>
 
     <div class="wrap">
         <!-- HEADER -->
         <header class="header tilt" data-depth="0.6">
+            <div class="crest" aria-hidden="true">
+                <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" fill="none">
+                    <defs>
+                        <linearGradient id="axeGrad" x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0" stop-color="#ffd36b" />
+                            <stop offset="1" stop-color="#ff2b45" />
+                        </linearGradient>
+                    </defs>
+                    <path d="M42 8c-2 5-8 8-13 7l-2 24-12 12c-2 2-2 6 0 8s6 2 8 0l12-12 24-2c-1-5 3-10 8-13-8-2-17 0-23 6l-7-7c6-6 8-15 6-23z" fill="url(#axeGrad)" opacity=".95"/>
+                    <circle cx="26" cy="54" r="2.5" fill="#ffd36b"/>
+                </svg>
+            </div>
             <div class="title">
-                <div class="name">THO DARIUS</div>
-                <div class="sub">League Of Lengends</div>
+                <div class="name" id="streamerName">THO DARIUS</div>
+                <div class="sub">
+                    <span id="streamerTagline">Hand of Noxus</span>
+                    <span class="sep">•</span>
+                    <span>League of Legends</span>
+                </div>
+                <div class="badges">
+                    <span class="badge role" id="roleBadge">Top</span>
+                    <span class="badge champ" id="champBadge">Darius Main</span>
+                    <span class="badge rank" id="rankBadge">Diamond II</span>
+                    <span class="badge stat" id="winRateBadge">58% WR</span>
+                </div>
             </div>
             <div class="live">
-                <img src="image/live_icon.png" width="40px"/>
+                <span class="dot"></span>
+                <span class="live-text">TRỰC TIẾP</span>
             </div>
         </header>
+
+        <!-- INFO TICKER -->
+        <div class="ticker-bar tilt" data-depth="0.4">
+            <div class="ticker-label">INFO</div>
+            <div class="ticker-track">
+                <div class="ticker-content" id="tickerContent"></div>
+            </div>
+        </div>
 
         <!-- LEFT: Chat + Donate -->
         <div class="left-col">
             <section class="zone chat tilt" data-depth="1.1" data-tilt-rot="3" data-tilt-x="2.2" data-tilt-y="2.2"
-                data-video-id=""> <!-- đổi ID của bạn ở đây -->
+                data-video-id="">
                 <div class="panel-head">
-                    <div class="pill">YouTube Chat</div>
-                    <div class="pill">Live</div>
+                    <div class="pill active">YouTube Chat</div>
+                    <div class="pill">Trực tiếp</div>
                 </div>
-                <div class="runic"></div>
-                <iframe id="ytChat" frameborder="0" allowfullscreen></iframe>
+                <iframe id="ytChat" frameborder="0" allowfullscreen title="YouTube Live Chat"></iframe>
             </section>
 
             <section class="zone donate tilt" data-depth="1.2" data-tilt-rot="3" data-tilt-x="2.4" data-tilt-y="2.4">
                 <div class="panel-head">
-                    <div class="pill">Donate</div>
-                    <div class="pill">Top recent</div>
+                    <div class="pill active">Donate</div>
+                    <div class="pill">Top gần đây</div>
                 </div>
-                <div class="runic"></div>
                 <div class="donate-list" id="donateList">
-                  
+                    <div class="donate-empty" id="donateEmpty">
+                        <svg viewBox="0 0 48 48" width="36" height="36" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M24 4l4 8h8l-6 6 2 8-8-5-8 5 2-8-6-6h8z"/>
+                        </svg>
+                        <span>Chưa có donate hôm nay</span>
+                    </div>
                 </div>
             </section>
         </div>
@@ -60,18 +115,26 @@
         <!-- RIGHT: Client Game -->
         <section class="zone game tilt" data-depth="0.9" data-tilt-rot="2.4" data-tilt-x="1.8" data-tilt-y="1.8">
             <div class="panel-head">
-                <div class="pill">Client</div>
+                <div class="pill active">Client</div>
                 <div class="pill">Gameplay</div>
+                <div class="hemo-stacks" aria-hidden="true" title="Hemorrhage">
+                    <span></span><span></span><span></span><span></span><span></span>
+                </div>
             </div>
 
             <div class="stage" id="stage">
                 <div class="mask"></div>
-                <!-- Subtle rounded corner glow (no squares) -->
                 <div class="corner-glow" aria-hidden="true">
                     <div class="cg tl"></div>
                     <div class="cg tr"></div>
                     <div class="cg bl"></div>
                     <div class="cg br"></div>
+                </div>
+                <div class="axe-frame" aria-hidden="true">
+                    <div class="axe-corner tl"></div>
+                    <div class="axe-corner tr"></div>
+                    <div class="axe-corner bl"></div>
+                    <div class="axe-corner br"></div>
                 </div>
                 <div class="sweep"></div>
                 <div class="streak s1"></div>
