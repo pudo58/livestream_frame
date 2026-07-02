@@ -105,13 +105,9 @@ function renderDonations(ranks) {
         amt.className = 'amt';
         amt.textContent = formatK(r.amount);
 
-        const glint = document.createElement('span');
-        glint.className = 'glint';
-
         div.appendChild(medal);
         div.appendChild(donor);
         div.appendChild(amt);
-        div.appendChild(glint);
 
         donateList.appendChild(div);
     });
