@@ -76,7 +76,7 @@ function renderDonations(ranks) {
     }
 
     donateList.innerHTML = '';
-    ranks.forEach((r, i) => {
+    ranks.slice(0, 3).forEach((r, i) => {
         const div = document.createElement('div');
         div.className = 'donate-item' + (i === 0 ? ' top-1' : '');
 

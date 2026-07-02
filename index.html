@@ -1,34 +1,39 @@
 <!DOCTYPE html>
 <html lang="vi">
 <!--
-  OBS Browser Source — 1920×1080, nền transparent.
+  OBS Browser Source 1920×1080 — nền gameplay TRANSPARENT.
 
   PREVIEW ONLY - REMOVE FOR OBS:
-  Khi xem trong browser, thêm class "preview-mode" vào thẻ <body> bên dưới
-  để bật nền xanh giả lập map LoL. XÓA class đó trước khi dùng trong OBS.
-
-  Ví dụ test:  <body class="preview-mode">
-  OBS thật:    <body>
+  Thêm class "preview-mode" vào <body> khi xem thử trong browser.
+  OBS thật: <body> không class.
 -->
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=1920, height=1080" />
-    <title>THO DARIUS — Noxus Overlay</title>
+    <title>THO DARIUS — Noxus Pro Overlay</title>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
     <style>
+        @property --border-angle {
+            syntax: "<angle>";
+            initial-value: 0deg;
+            inherits: false;
+        }
+
         :root {
             --bg-dark: #0a0605;
             --bg-mid: #1a0f0c;
-            --red: #c41e1e;
+            --red: #ff1e3c;
             --red-live: #e63946;
-            --gold: #d4af37;
-            --gold-light: #f4d47c;
-            --text: #ece4d4;
+            --gold: #ffd700;
+            --gold-dim: #d4af37;
+            --orange: #ff6b35;
+            --text: #f0e8dc;
             --text-muted: #b8a888;
             --sidebar-w: 380px;
+            --header-h: 90px;
+            --ticker-h: 36px;
+            --sidebar-h: 954px; /* 1080 - 90 - 36 */
             --panel-grad: linear-gradient(160deg, #1a0f0c 0%, #0a0605 100%);
-            --gold-border: linear-gradient(135deg, #f4d47c, #d4af37, #8b6914, #f4d47c);
-            --gold-glow: 0 0 16px rgba(212, 175, 55, 0.28), 0 0 4px rgba(244, 212, 124, 0.4);
         }
 
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -37,17 +42,16 @@
             width: 1920px;
             height: 1080px;
             overflow: hidden;
-            background: transparent; /* OBS: gameplay hiện xuyên qua */
+            background: transparent;
         }
 
         body {
             color: var(--text);
             font-family: "Rajdhani", system-ui, sans-serif;
             font-size: 16px;
-            position: relative;
         }
 
-        /* PREVIEW ONLY - REMOVE FOR OBS: nền xanh giả lập map LoL khi test browser */
+        /* PREVIEW ONLY - REMOVE FOR OBS */
         .preview-bg {
             display: none;
             position: fixed;
@@ -57,100 +61,123 @@
             pointer-events: none;
         }
 
-        body.preview-mode .preview-bg {
-            display: block;
-        }
+        body.preview-mode .preview-bg { display: block; }
 
-        /* Panel UI — chỉ áp dụng lên header/sidebar/ticker, KHÔNG lên game-area */
-        .noxus-panel {
+        /* ===== ANIMATED BORDER PANEL ===== */
+        .stream-panel {
             position: relative;
-            border: 2px solid transparent;
-            background:
-                var(--panel-grad) padding-box,
-                var(--gold-border) border-box;
-            box-shadow: var(--gold-glow), inset 0 1px 0 rgba(244, 212, 124, 0.07);
+            background: var(--panel-grad);
             overflow: hidden;
+            animation: panel-glow 3s ease-in-out infinite;
         }
 
-        .noxus-panel::before {
+        @keyframes panel-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(255, 30, 60, 0.12), 0 0 40px rgba(255, 215, 0, 0.08); }
+            50%       { box-shadow: 0 0 30px rgba(255, 30, 60, 0.22), 0 0 60px rgba(255, 215, 0, 0.15); }
+        }
+
+        .stream-panel::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            padding: 2px;
+            background: conic-gradient(from var(--border-angle), #ffd700, #ff1e3c, #ff6b35, #ffd700, #ff1e3c);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            animation: spin-border 4s linear infinite;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        @keyframes spin-border {
+            to { --border-angle: 360deg; }
+        }
+
+        .stream-panel::after {
             content: "";
             position: absolute;
             inset: 0;
             pointer-events: none;
-            opacity: 0.04;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-        }
-
-        /* Ember — CHỈ trong panel UI, không phủ vùng gameplay */
-        .panel-embers {
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            overflow: hidden;
+            opacity: 0.035;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
             z-index: 0;
         }
 
-        .ember {
+        /* Shimmer sweep overlay */
+        .shimmer {
             position: absolute;
-            width: 5px;
-            height: 5px;
-            border-radius: 50%;
-            background: #e8a030;
-            box-shadow: 0 0 8px rgba(232, 160, 48, 0.6);
-            animation: ember-float 10s ease-in-out infinite;
-        }
-
-        @keyframes ember-float {
-            0%, 100% { opacity: 0.3; transform: translateY(0); }
-            50%       { opacity: 0.6; transform: translateY(-40px); }
-        }
-
-        .wrap {
-            position: relative;
+            inset: 0;
+            pointer-events: none;
             z-index: 1;
+            overflow: hidden;
+        }
+
+        .shimmer::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 60%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.07), transparent);
+            animation: shimmer-pass 5s ease-in-out infinite;
+        }
+
+        @keyframes shimmer-pass {
+            0%   { left: -60%; }
+            100% { left: 140%; }
+        }
+
+        /* ===== LAYOUT — fixed 1080px, NO scroll ===== */
+        .wrap {
             width: 1920px;
             height: 1080px;
-            padding: 16px;
             display: grid;
-            gap: 12px;
             grid-template-columns: var(--sidebar-w) 1fr;
-            grid-template-rows: 90px 40px 1fr;
+            grid-template-rows: var(--header-h) var(--ticker-h) var(--sidebar-h);
+            gap: 0;
             background: transparent;
         }
 
-        /* ===== HEADER ~90px ===== */
+        /* ===== HEADER 90px ===== */
         .header {
             grid-column: 1 / -1;
-            grid-row: 1;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 14px 22px;
+            padding: 0 22px;
         }
 
         .brand {
             display: flex;
             align-items: center;
-            gap: 18px;
+            gap: 16px;
             position: relative;
-            z-index: 1;
+            z-index: 3;
         }
 
         .avatar {
             width: 58px;
             height: 58px;
             border-radius: 50%;
-            flex-shrink: 0;
             display: grid;
             place-items: center;
             border: 2px solid var(--gold);
-            box-shadow: 0 0 18px rgba(212, 175, 55, 0.55), 0 0 36px rgba(212, 175, 55, 0.2);
             background: linear-gradient(145deg, #1a0f0c, #0a0605);
-            color: var(--gold-light);
+            color: var(--gold);
+            animation: avatar-pulse 2.5s ease-in-out infinite;
+        }
+
+        @keyframes avatar-pulse {
+            0%, 100% { box-shadow: 0 0 16px rgba(255, 215, 0, 0.45), 0 0 32px rgba(255, 30, 60, 0.2); }
+            50%       { box-shadow: 0 0 28px rgba(255, 215, 0, 0.75), 0 0 56px rgba(255, 30, 60, 0.35); }
         }
 
         .avatar svg { width: 30px; height: 30px; }
 
+        /* Animated fire gradient name */
         .name {
             font-family: "Cinzel Decorative", serif;
             font-size: 36px;
@@ -158,11 +185,18 @@
             letter-spacing: 5px;
             text-transform: uppercase;
             line-height: 1;
-            background: linear-gradient(95deg, var(--red-live) 0%, var(--gold-light) 50%, var(--gold) 100%);
+            background: linear-gradient(90deg, #ff1e3c, #ff6b35, #ffd700, #ff6b35, #ff1e3c);
+            background-size: 300% 100%;
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
-            filter: drop-shadow(0 2px 10px rgba(196, 30, 30, 0.55));
+            animation: fire-name 5s ease-in-out infinite;
+            filter: drop-shadow(0 0 12px rgba(255, 30, 60, 0.5));
+        }
+
+        @keyframes fire-name {
+            0%, 100% { background-position: 0% 50%; }
+            50%       { background-position: 100% 50%; }
         }
 
         .meta {
@@ -170,34 +204,40 @@
             flex-wrap: wrap;
             align-items: center;
             gap: 8px;
-            margin-top: 8px;
+            margin-top: 6px;
             font-size: 16px;
             font-weight: 600;
             color: var(--text-muted);
+            animation: meta-fade 4s ease-in-out infinite alternate;
+        }
+
+        @keyframes meta-fade {
+            from { opacity: 0.85; }
+            to   { opacity: 1; text-shadow: 0 0 8px rgba(255, 215, 0, 0.15); }
         }
 
         .meta .sep { opacity: 0.35; }
-        .meta .star { color: var(--gold-light); }
+        .meta .star { color: var(--gold); text-shadow: 0 0 8px rgba(255, 215, 0, 0.6); }
 
-        /* ===== LIVE BADGE ===== */
+        /* ===== LIVE — strongest glow ===== */
         .live {
             position: relative;
-            z-index: 1;
+            z-index: 3;
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 14px 26px;
-            background: var(--red-live);
+            padding: 14px 28px;
+            background: linear-gradient(135deg, #ff1e3c, #e63946);
             color: #fff;
             font-size: 17px;
             font-weight: 700;
             letter-spacing: 2.5px;
-            animation: live-pulse 2s ease-in-out infinite;
+            animation: live-blast 2s ease-in-out infinite;
         }
 
-        @keyframes live-pulse {
-            0%, 100% { box-shadow: 0 0 14px rgba(230, 57, 70, 0.65), 0 0 30px rgba(230, 57, 70, 0.35); }
-            50%       { box-shadow: 0 0 26px rgba(230, 57, 70, 1),    0 0 60px rgba(230, 57, 70, 0.6); }
+        @keyframes live-blast {
+            0%, 100% { box-shadow: 0 0 20px rgba(255, 30, 60, 0.8), 0 0 50px rgba(230, 57, 70, 0.5), 0 0 80px rgba(255, 30, 60, 0.25); }
+            50%       { box-shadow: 0 0 35px rgba(255, 30, 60, 1),   0 0 80px rgba(230, 57, 70, 0.8), 0 0 120px rgba(255, 30, 60, 0.4); }
         }
 
         .live-dot {
@@ -205,49 +245,50 @@
             height: 11px;
             border-radius: 50%;
             background: #fff;
-            box-shadow: 0 0 10px #fff;
-            animation: dot-blink 1s ease-in-out infinite;
+            box-shadow: 0 0 12px #fff;
+            animation: dot-flash 0.8s ease-in-out infinite;
         }
 
-        @keyframes dot-blink {
-            0%, 100% { opacity: 1; }
-            50%       { opacity: 0.25; }
+        @keyframes dot-flash {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50%       { opacity: 0.2; transform: scale(0.7); }
         }
 
-        /* ===== TICKER ~40px ===== */
+        /* ===== TICKER 36px ===== */
         .ticker-bar {
             grid-column: 1 / -1;
-            grid-row: 2;
             display: flex;
             align-items: stretch;
-            padding: 0;
+            height: var(--ticker-h);
         }
 
         .ticker-label {
             display: flex;
             align-items: center;
-            padding: 0 20px;
-            background: var(--red);
+            padding: 0 16px;
+            background: linear-gradient(180deg, #ff1e3c, #c41e1e);
             color: #fff;
             font-family: "Cinzel Decorative", serif;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 700;
             letter-spacing: 3px;
             flex-shrink: 0;
+            animation: label-pulse 3s ease-in-out infinite;
         }
 
-        .ticker-divider {
+        @keyframes label-pulse {
+            0%, 100% { box-shadow: inset 0 0 12px rgba(255,255,255,0.1); }
+            50%       { box-shadow: inset 0 0 20px rgba(255,255,255,0.2); }
+        }
+
+        .ticker-gap {
             display: flex;
             align-items: center;
-            padding: 0 14px;
+            padding: 0 12px;
             background: var(--panel-grad);
             color: var(--gold);
-            font-size: 18px;
+            font-size: 16px;
             flex-shrink: 0;
-            border-top: 2px solid transparent;
-            border-bottom: 2px solid transparent;
-            background-clip: padding-box;
-            border-image: var(--gold-border) 1;
         }
 
         .ticker-track {
@@ -255,21 +296,16 @@
             display: flex;
             align-items: center;
             overflow: hidden;
-            padding: 0 12px;
             background: var(--panel-grad);
-            border: 2px solid transparent;
-            border-left: none;
-            background-clip: padding-box;
-            /* fade 2 đầu scroll */
-            mask-image: linear-gradient(90deg, transparent 0%, #000 8%, #000 92%, transparent 100%);
-            -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 8%, #000 92%, transparent 100%);
+            mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+            -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
         }
 
         .ticker-content {
             display: flex;
-            gap: 48px;
+            gap: 56px;
             white-space: nowrap;
-            animation: ticker-scroll 30s linear infinite;
+            animation: ticker-run 28s linear infinite;
         }
 
         .ticker-content span {
@@ -278,80 +314,115 @@
             color: var(--text-muted);
         }
 
-        @keyframes ticker-scroll {
+        @keyframes ticker-run {
             to { transform: translateX(-50%); }
         }
 
-        /* ===== SIDEBAR 380px ===== */
+        /* ===== SIDEBAR 954px — 55% chat / 45% donate, NO scroll ===== */
         .sidebar {
             grid-column: 1;
             grid-row: 3;
+            height: var(--sidebar-h);
             display: flex;
             flex-direction: column;
-            gap: 12px;
-            min-height: 0;
         }
 
         .panel {
             display: flex;
             flex-direction: column;
-            min-height: 0;
-        }
-
-        .panel.chat { flex: 1; }
-
-        .panel.donate {
-            height: 250px;
+            overflow: hidden;
             flex-shrink: 0;
         }
 
+        .panel.chat  { height: calc(var(--sidebar-h) * 0.55); } /* ~525px */
+        .panel.donate { height: calc(var(--sidebar-h) * 0.45); } /* ~429px */
+
         .panel-head {
             position: relative;
-            z-index: 1;
-            padding: 10px 16px;
-            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
-            background: rgba(0, 0, 0, 0.22);
+            z-index: 3;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 0 12px;
+            height: 36px;
+            flex-shrink: 0;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.15);
+            background: rgba(0, 0, 0, 0.3);
         }
 
-        .panel-title {
-            font-family: "Cinzel Decorative", serif;
+        .tab {
+            padding: 4px 12px;
             font-size: 14px;
             font-weight: 700;
-            letter-spacing: 2.5px;
-            color: var(--gold-light);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            border: 1px solid transparent;
+            cursor: default;
+            transition: color 0.2s, border-color 0.2s, box-shadow 0.2s;
         }
 
-        /* Chat */
+        .tab.active {
+            color: var(--gold);
+            border-color: rgba(255, 215, 0, 0.35);
+            box-shadow: 0 0 12px rgba(255, 215, 0, 0.2);
+            animation: tab-glow 2s ease-in-out infinite;
+        }
+
+        .tab:hover:not(.active) {
+            color: var(--orange);
+            border-color: rgba(255, 107, 53, 0.3);
+        }
+
+        @keyframes tab-glow {
+            0%, 100% { box-shadow: 0 0 8px rgba(255, 215, 0, 0.15); }
+            50%       { box-shadow: 0 0 16px rgba(255, 215, 0, 0.35); }
+        }
+
+        /* ===== CHAT — max 6 msgs, overflow hidden, slide-in ===== */
         .chat-body {
             position: relative;
-            z-index: 1;
+            z-index: 3;
             flex: 1;
-            min-height: 0;
             overflow: hidden;
+            min-height: 0;
         }
 
-        .chat-placeholder {
+        .chat-msgs {
             height: 100%;
-            overflow-y: auto;
-            padding: 12px 14px;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            justify-content: flex-end;
+            padding: 8px 12px;
+            gap: 4px;
         }
 
         .chat-msg {
+            flex-shrink: 0;
             font-size: 15px;
-            line-height: 1.35;
-            word-break: break-word;
+            line-height: 1.3;
+            padding: 4px 0;
+            animation: msg-slide-in 0.5s ease-out;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
-        .chat-msg .user {
-            font-weight: 700;
-            color: var(--gold-light);
-            margin-right: 6px;
+        @keyframes msg-slide-in {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
         }
 
+        .chat-msg .user { font-weight: 700; margin-right: 6px; }
         .chat-msg .text { color: var(--text-muted); }
+
+        .chat-msg:nth-child(1) .user { color: #ffd700; }
+        .chat-msg:nth-child(2) .user { color: #ff6b35; }
+        .chat-msg:nth-child(3) .user { color: #ff4757; }
+        .chat-msg:nth-child(4) .user { color: #ffa502; }
+        .chat-msg:nth-child(5) .user { color: #ff6348; }
+        .chat-msg:nth-child(6) .user { color: #eccc68; }
 
         .chat iframe {
             position: absolute;
@@ -363,45 +434,48 @@
             display: none;
         }
 
-        .chat iframe.active { display: block; }
+        .chat.has-live iframe { display: block; }
+        .chat.has-live .chat-msgs { display: none; }
 
-        .chat.has-live .chat-placeholder { display: none; }
-
-        /* Donate */
+        /* ===== DONATE — TOP 3 only, ~50px/row, NO scroll ===== */
         .donate-list {
             position: relative;
-            z-index: 1;
+            z-index: 3;
             flex: 1;
-            overflow-y: auto;
-            padding: 10px;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            justify-content: center;
+            padding: 6px 10px;
+            gap: 6px;
+            min-height: 0;
         }
 
         .donate-item {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 11px 14px;
+            gap: 10px;
+            height: 50px;
+            flex-shrink: 0;
+            padding: 0 12px;
             background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(212, 175, 55, 0.15);
-            transition: border-color 0.25s, box-shadow 0.25s;
-        }
-
-        .donate-item.highlight {
-            border-color: rgba(212, 175, 55, 0.5);
-            box-shadow: 0 0 14px rgba(212, 175, 55, 0.18);
+            border: 1px solid rgba(255, 215, 0, 0.12);
         }
 
         .donate-item.top-1 {
-            background: linear-gradient(90deg, rgba(196, 30, 30, 0.14), rgba(255,255,255,0.02));
-            border-color: rgba(212, 175, 55, 0.38);
+            border-color: rgba(255, 215, 0, 0.4);
+            background: linear-gradient(90deg, rgba(255, 30, 60, 0.15), rgba(255,255,255,0.02));
+            animation: top1-pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes top1-pulse {
+            0%, 100% { box-shadow: 0 0 10px rgba(255, 215, 0, 0.2); }
+            50%       { box-shadow: 0 0 22px rgba(255, 215, 0, 0.45); }
         }
 
         .medal {
-            width: 32px;
-            height: 36px;
+            width: 30px;
+            height: 34px;
             flex-shrink: 0;
             display: grid;
             place-items: center;
@@ -411,10 +485,14 @@
             color: #1a0f0c;
         }
 
-        .medal.gold   { background: linear-gradient(180deg, #f4d47c, #d4af37, #8b6914); box-shadow: 0 0 12px rgba(212,175,55,0.55); }
-        .medal.silver { background: linear-gradient(180deg, #ddd8cc, #9a9590, #6a6560); }
-        .medal.bronze { background: linear-gradient(180deg, #c87533, #8b4513, #5c2d0e); color: #fff; }
-        .medal.normal { clip-path: none; border-radius: 4px; width: 28px; height: 28px; background: #2a1a15; color: var(--text-muted); border: 1px solid rgba(212,175,55,0.2); }
+        .medal.gold   { background: linear-gradient(180deg, #ffd700, #d4af37); box-shadow: 0 0 14px rgba(255,215,0,0.7); animation: medal-gold 2s ease-in-out infinite; }
+        .medal.silver { background: linear-gradient(180deg, #e8e4dc, #9a9590); box-shadow: 0 0 10px rgba(200,200,200,0.4); }
+        .medal.bronze { background: linear-gradient(180deg, #cd7f32, #8b4513); color: #fff; box-shadow: 0 0 10px rgba(205,127,50,0.4); }
+
+        @keyframes medal-gold {
+            0%, 100% { filter: brightness(1); }
+            50%       { filter: brightness(1.25); }
+        }
 
         .donor {
             flex: 1;
@@ -429,26 +507,47 @@
         .amt {
             font-size: 18px;
             font-weight: 700;
-            color: var(--gold-light);
+            color: var(--gold);
             flex-shrink: 0;
-            text-shadow: 0 0 10px rgba(244, 212, 124, 0.3);
+            text-shadow: 0 0 12px rgba(255, 215, 0, 0.4);
         }
 
         .donate-empty {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
+            text-align: center;
             font-size: 16px;
             color: var(--text-muted);
         }
 
-        /* ===== GAME AREA — 100% TRANSPARENT, không gradient/vignette ===== */
+        /* Panel embers — inside UI only */
+        .panel-embers {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .ember {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle, #ffd700, #ff6b35);
+            animation: ember-drift linear infinite;
+        }
+
+        @keyframes ember-drift {
+            0%   { opacity: 0; transform: translateY(0) scale(1); }
+            15%  { opacity: 0.7; }
+            85%  { opacity: 0.3; }
+            100% { opacity: 0; transform: translateY(-100px) scale(0.2); }
+        }
+
+        /* ===== GAME AREA — 100% transparent ===== */
         .game-area {
             grid-column: 2;
             grid-row: 3;
-            min-height: 0;
+            height: var(--sidebar-h);
             background: transparent;
+            position: relative;
         }
 
         .game-frame {
@@ -458,21 +557,36 @@
             background: transparent;
         }
 
-        /* Bracket 3px × 40px, vàng kim glow — KHÔNG phủ kín vùng game */
+        /* Floating embers above game — individual dots, NOT solid layer */
+        .game-embers {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 1;
+            overflow: hidden;
+            background: transparent;
+        }
+
         .frame-corner {
             position: absolute;
             width: 44px;
             height: 44px;
-            z-index: 2;
+            z-index: 3;
             pointer-events: none;
+            animation: bracket-pulse 3s ease-in-out infinite;
+        }
+
+        @keyframes bracket-pulse {
+            0%, 100% { filter: drop-shadow(0 0 6px rgba(255,215,0,0.5)); }
+            50%       { filter: drop-shadow(0 0 14px rgba(255,215,0,0.9)); }
         }
 
         .frame-corner::before,
         .frame-corner::after {
             content: "";
             position: absolute;
-            background: linear-gradient(90deg, var(--gold-light), var(--gold));
-            box-shadow: 0 0 12px rgba(212, 175, 55, 0.65), 0 0 24px rgba(244, 212, 124, 0.25);
+            background: linear-gradient(90deg, #ffd700, #ff6b35);
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
         }
 
         .frame-corner.tl { top: 12px; left: 12px; }
@@ -483,7 +597,6 @@
         .frame-corner.tr::before { top: 0; right: 0; width: 40px; height: 3px; }
         .frame-corner.tr::after  { top: 0; right: 0; width: 3px; height: 40px; }
 
-        /* Tránh HUD skill bar (BL) và minimap (BR) */
         .frame-corner.bl { bottom: 115px; left: 12px; }
         .frame-corner.bl::before { bottom: 0; left: 0; width: 40px; height: 3px; }
         .frame-corner.bl::after  { bottom: 0; left: 0; width: 3px; height: 40px; }
@@ -499,63 +612,57 @@
             z-index: 0;
         }
 
-        /* Watermark rìu Noxus — góc dưới trái, opacity 12-15%, vàng kim, SVG inline */
         .watermark {
             position: absolute;
             left: 20px;
             bottom: 20px;
             width: 150px;
-            z-index: 1;
+            z-index: 2;
             pointer-events: none;
             opacity: 0.13;
             color: var(--gold);
-            filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.3));
+            animation: wm-pulse 6s ease-in-out infinite;
         }
 
-        .watermark svg { display: block; width: 100%; height: auto; }
+        @keyframes wm-pulse {
+            0%, 100% { opacity: 0.11; filter: drop-shadow(0 0 16px rgba(255,215,0,0.2)); }
+            50%       { opacity: 0.15; filter: drop-shadow(0 0 28px rgba(255,215,0,0.35)); }
+        }
+
+        .watermark svg { display: block; width: 100%; }
     </style>
 </head>
 
-<!-- PREVIEW ONLY: thêm class preview-mode khi test browser. OBS: giữ <body> không class. -->
 <body>
-
     <!-- PREVIEW ONLY - REMOVE FOR OBS -->
     <div class="preview-bg" aria-hidden="true"></div>
 
     <div class="wrap">
-        <header class="header noxus-panel">
+        <header class="header stream-panel">
+            <div class="shimmer"></div>
             <div class="panel-embers" aria-hidden="true"></div>
             <div class="brand">
                 <div class="avatar" aria-hidden="true">
-                    <svg viewBox="0 0 64 64" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M42 8c-2 5-8 8-13 7l-2 24-12 12c-2 2-2 6 0 8s6 2 8 0l12-12 24-2c-1-5 3-10 8-13-8-2-17 0-23 6l-7-7c6-6 8-15 6-23z"/>
-                    </svg>
+                    <svg viewBox="0 0 64 64" fill="currentColor"><path d="M42 8c-2 5-8 8-13 7l-2 24-12 12c-2 2-2 6 0 8s6 2 8 0l12-12 24-2c-1-5 3-10 8-13-8-2-17 0-23 6l-7-7c6-6 8-15 6-23z"/></svg>
                 </div>
                 <div>
                     <h1 class="name" id="streamerName">THO DARIUS</h1>
                     <p class="meta">
-                        <span id="streamerTagline">Hand of Noxus</span>
-                        <span class="sep">•</span>
-                        <span id="champBadge">Darius Main</span>
-                        <span class="sep">•</span>
-                        <span id="roleBadge">Top</span>
-                        <span class="sep">•</span>
-                        <span class="star">★</span>
-                        <span id="rankBadge">Diamond II</span>
-                        <span class="sep">•</span>
+                        <span id="streamerTagline">Hand of Noxus</span><span class="sep">•</span>
+                        <span id="champBadge">Darius Main</span><span class="sep">•</span>
+                        <span id="roleBadge">Top</span><span class="sep">•</span>
+                        <span class="star">★</span><span id="rankBadge">Diamond II</span><span class="sep">•</span>
                         <span id="winRateBadge">58% WR</span>
                     </p>
                 </div>
             </div>
-            <div class="live">
-                <span class="live-dot"></span>
-                TRỰC TIẾP
-            </div>
+            <div class="live"><span class="live-dot"></span>TRỰC TIẾP</div>
         </header>
 
-        <div class="ticker-bar noxus-panel">
+        <div class="ticker-bar stream-panel">
+            <div class="shimmer"></div>
             <div class="ticker-label">NOXUS</div>
-            <div class="ticker-divider">•</div>
+            <div class="ticker-gap">•</div>
             <div class="ticker-track">
                 <div class="ticker-content" id="tickerContent">
                     <span>Main Darius • Top Lane</span>
@@ -567,26 +674,30 @@
         </div>
 
         <aside class="sidebar">
-            <section class="panel chat noxus-panel" data-video-id="">
+            <section class="panel chat stream-panel" data-video-id="">
+                <div class="shimmer"></div>
                 <div class="panel-embers" aria-hidden="true"></div>
                 <div class="panel-head">
-                    <span class="panel-title">YouTube Chat</span>
+                    <span class="tab active">YouTube Chat</span>
+                    <span class="tab">Trực tiếp</span>
                 </div>
                 <div class="chat-body">
-                    <div class="chat-placeholder" id="chatPlaceholder">
-                        <div class="chat-msg"><span class="user">SilverDarius</span><span class="text">Darius top free win nhé bro 🔥</span></div>
+                    <div class="chat-msgs" id="chatMsgs">
+                        <div class="chat-msg"><span class="user">SilverDarius</span><span class="text">Darius top free win nhé bro</span></div>
                         <div class="chat-msg"><span class="user">NoxusFan_99</span><span class="text">Hand of Noxus đi top đúng rồi</span></div>
-                        <div class="chat-msg"><span class="user">TopGapKing</span><span class="text">Cho xem ult reset pentakill đi streamer</span></div>
-                        <div class="chat-msg"><span class="user">LanerVN</span><span class="text">Diamond II grind bao lâu nữa lên Master?</span></div>
+                        <div class="chat-msg"><span class="user">TopGapKing</span><span class="text">Cho xem ult reset pentakill đi</span></div>
+                        <div class="chat-msg"><span class="user">LanerVN</span><span class="text">Diamond II grind bao lâu lên Master?</span></div>
+                        <div class="chat-msg"><span class="user">DunkMaster_VN</span><span class="text">Noxus will rise!</span></div>
                     </div>
                     <iframe id="ytChat" title="YouTube Live Chat" allowfullscreen></iframe>
                 </div>
             </section>
 
-            <section class="panel donate noxus-panel">
+            <section class="panel donate stream-panel">
+                <div class="shimmer"></div>
                 <div class="panel-embers" aria-hidden="true"></div>
                 <div class="panel-head">
-                    <span class="panel-title">Top Donate</span>
+                    <span class="tab active">Top Donate</span>
                 </div>
                 <div class="donate-list" id="donateList">
                     <div class="donate-item top-1">
@@ -608,16 +719,16 @@
             </section>
         </aside>
 
-        <!-- Vùng gameplay: background transparent tuyệt đối, OBS capture game ở đây -->
         <main class="game-area">
             <div class="game-frame">
+                <div class="game-embers" aria-hidden="true"></div>
                 <div class="frame-corner tl"></div>
                 <div class="frame-corner tr"></div>
                 <div class="frame-corner bl"></div>
                 <div class="frame-corner br"></div>
-                <div class="stage" id="stage">
+                <div class="stage">
                     <div class="watermark" aria-hidden="true">
-                        <svg viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="7" xmlns="http://www.w3.org/2000/svg">
+                        <svg viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="7">
                             <path d="M168 36c-8 18-30 30-48 28l-6 86-42 42c-8 8-8 22 0 30s22 8 30 0l42-42 86-6c-2-18 10-40 28-48-28-8-60 0-82 22l-24-24c22-22 30-54 22-82z"/>
                             <circle cx="90" cy="192" r="7" fill="currentColor" stroke="none"/>
                         </svg>
@@ -628,27 +739,12 @@
     </div>
 
     <script id="overlay-config" type="application/json">
-    {
-        "streamer": "THO DARIUS",
-        "tagline": "Hand of Noxus",
-        "rank": "Diamond II",
-        "role": "Top",
-        "mainChamp": "Darius",
-        "winRate": "58%",
-        "ticker": [
-            "Main Darius • Top Lane",
-            "Hand of Noxus • Noxus Will Rise",
-            "Follow để không bỏ lỡ pentakill",
-            "Donate qua Super Chat hoặc chuyển khoản"
-        ],
-        "donateRefreshMs": 300000
-    }
+    {"streamer":"THO DARIUS","tagline":"Hand of Noxus","rank":"Diamond II","role":"Top","mainChamp":"Darius","winRate":"58%","ticker":["Main Darius • Top Lane","Hand of Noxus • Noxus Will Rise","Follow để không bỏ lỡ pentakill","Donate qua Super Chat hoặc chuyển khoản"],"donateRefreshMs":300000}
     </script>
 
     <script src="js/main.js"></script>
     <script>
     (function () {
-        /* Config */
         let cfg = {};
         try { cfg = JSON.parse(document.getElementById('overlay-config').textContent); } catch (_) {}
 
@@ -662,47 +758,57 @@
 
         const ticker = document.getElementById('tickerContent');
         if (ticker && cfg.ticker?.length) {
-            const html = cfg.ticker.map(t => '<span>' + t + '</span>').join('');
-            ticker.innerHTML = html + html;
+            const h = cfg.ticker.map(t => '<span>' + t + '</span>').join('');
+            ticker.innerHTML = h + h;
         }
 
-        /* YouTube chat — ẩn placeholder khi có video ID */
         const chatPanel = document.querySelector('.panel.chat');
         const iframe = document.getElementById('ytChat');
         if (chatPanel && iframe) {
-            const host = location.hostname || 'localhost';
             const vid = (chatPanel.dataset.videoId || new URLSearchParams(location.search).get('v') || '').trim();
             if (vid) {
-                iframe.src = 'https://www.youtube.com/live_chat?v=' + vid + '&embed_domain=' + host + '&dark_theme=1';
-                iframe.classList.add('active');
+                iframe.src = 'https://www.youtube.com/live_chat?v=' + vid + '&embed_domain=' + (location.hostname || 'localhost') + '&dark_theme=1';
                 chatPanel.classList.add('has-live');
             }
         }
 
-        /* Ember particles — chỉ trong panel UI */
-        document.querySelectorAll('.panel-embers').forEach(box => {
-            for (let i = 0; i < 4; i++) {
+        function spawnEmbers(container, count) {
+            for (let i = 0; i < count; i++) {
                 const e = document.createElement('span');
                 e.className = 'ember';
-                e.style.left = (8 + Math.random() * 84) + '%';
-                e.style.bottom = (Math.random() * 40) + 'px';
-                e.style.animationDuration = (8 + Math.random() * 4) + 's';
-                e.style.animationDelay = (Math.random() * 5) + 's';
-                box.appendChild(e);
+                const size = 4 + Math.random() * 3;
+                e.style.width = e.style.height = size + 'px';
+                e.style.left = (5 + Math.random() * 90) + '%';
+                e.style.bottom = (Math.random() * 20) + 'px';
+                e.style.animationDuration = (6 + Math.random() * 6) + 's';
+                e.style.animationDelay = (Math.random() * 8) + 's';
+                container.appendChild(e);
             }
-        });
+        }
 
-        window.initDonateHighlight = function () {
-            const items = [...document.querySelectorAll('.donate-item')];
-            if (!items.length) return;
-            let i = 0;
-            if (window._donateTimer) clearInterval(window._donateTimer);
-            window._donateTimer = setInterval(() => {
-                items.forEach((el, idx) => el.classList.toggle('highlight', idx === i));
-                i = (i + 1) % items.length;
-            }, 3000);
-        };
-        window.initDonateHighlight();
+        document.querySelectorAll('.panel-embers').forEach(el => spawnEmbers(el, 10));
+        const gameEmbers = document.querySelector('.game-embers');
+        if (gameEmbers) spawnEmbers(gameEmbers, 8);
+
+        /* Demo chat slide-in cycle */
+        const chatMsgs = document.getElementById('chatMsgs');
+        if (chatMsgs && !chatPanel.classList.contains('has-live')) {
+            const demos = [
+                ['GhostTopVN', 'Gank top được không streamer'],
+                ['IronClimber', 'Darius vs Fiora khó không'],
+                ['NoxusWillRise', 'Subscribe rồi nhé bro']
+            ];
+            let idx = 0;
+            setInterval(() => {
+                const [user, text] = demos[idx % demos.length];
+                const div = document.createElement('div');
+                div.className = 'chat-msg';
+                div.innerHTML = '<span class="user">' + user + '</span><span class="text">' + text + '</span>';
+                chatMsgs.appendChild(div);
+                while (chatMsgs.children.length > 6) chatMsgs.removeChild(chatMsgs.firstChild);
+                idx++;
+            }, 5000);
+        }
     })();
     </script>
 </body>
