@@ -32,10 +32,11 @@
             --sidebar-w: 380px;
             --header-h: 90px;
             --ticker-h: 36px;
-            --sidebar-h: 954px; /* 1080 - 90 - 36 */
+            --sidebar-h: 954px;
+            --donate-block: 210px;
+            --chat-block: calc(var(--sidebar-h) - var(--donate-block) - 8px);
             --panel-grad: linear-gradient(160deg, #1f0a0a 0%, #0a0605 55%, #120808 100%);
             --blood: #8b0000;
-            --donate-h: 216px;
         }
 
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -44,7 +45,8 @@
             width: 1920px;
             height: 1080px;
             overflow: hidden;
-            background: transparent;
+            background: transparent !important;
+            background-color: rgba(0, 0, 0, 0) !important;
         }
 
         body {
@@ -347,32 +349,26 @@
             to { transform: translateX(-50%); }
         }
 
-        /* ===== SIDEBAR — chat flex, donate cố định trên đáy sidebar ===== */
+        /* ===== SIDEBAR — grid cố định pixel, donate KHÔNG bị cắt ===== */
         .sidebar {
             grid-column: 1;
             grid-row: 3;
             height: var(--sidebar-h);
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-template-rows: var(--chat-block) var(--donate-block);
             gap: 8px;
+            overflow: hidden;
         }
 
         .panel {
             display: flex;
             flex-direction: column;
             overflow: hidden;
-        }
-
-        .panel.chat {
-            flex: 1;
             min-height: 0;
         }
 
-        .panel.donate {
-            flex-shrink: 0;
-            height: var(--donate-h);
-            margin-top: 0;
-        }
+        .panel.chat  { height: var(--chat-block); }
+        .panel.donate { height: var(--donate-block); }
 
         .panel-head {
             position: relative;
@@ -430,9 +426,10 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            justify-content: flex-end;
-            padding: 8px 12px;
-            gap: 4px;
+            justify-content: flex-start;
+            padding: 10px 12px;
+            gap: 6px;
+            background: rgba(0, 0, 0, 0.15);
         }
 
         .chat-msg {
@@ -474,17 +471,17 @@
         .chat.has-live iframe { display: block; }
         .chat.has-live .chat-msgs { display: none; }
 
-        /* ===== DONATE — TOP 3, dính sát header panel, không float giữa ===== */
+        /* ===== DONATE — TOP 3 cố định, luôn hiện đủ ===== */
         .donate-list {
             position: relative;
             z-index: 3;
             flex: 1;
             overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            padding: 8px 10px;
+            display: grid;
+            grid-template-rows: repeat(3, 48px);
             gap: 6px;
+            padding: 8px 10px 10px;
+            align-content: start;
             min-height: 0;
         }
 
@@ -492,8 +489,7 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            height: 50px;
-            flex-shrink: 0;
+            height: 52px;
             padding: 0 12px;
             background: linear-gradient(90deg, rgba(139, 0, 0, 0.12), rgba(255, 255, 255, 0.02));
             border: 1px solid rgba(255, 215, 0, 0.18);
@@ -579,12 +575,19 @@
             100% { opacity: 0; transform: translateY(-100px) scale(0.2); }
         }
 
-        /* ===== GAME AREA — 100% transparent ===== */
+        /* ===== GAME AREA — transparent tuyệt đối cho OBS ===== */
+        .game-area,
+        .game-frame,
+        .stage,
+        .game-embers {
+            background: transparent !important;
+            background-color: rgba(0, 0, 0, 0) !important;
+        }
+
         .game-area {
             grid-column: 2;
             grid-row: 3;
             height: var(--sidebar-h);
-            background: transparent;
             position: relative;
         }
 
@@ -592,17 +595,14 @@
             position: relative;
             width: 100%;
             height: 100%;
-            background: transparent;
         }
 
-        /* Floating embers above game — individual dots, NOT solid layer */
         .game-embers {
             position: absolute;
             inset: 0;
             pointer-events: none;
             z-index: 1;
             overflow: hidden;
-            background: transparent;
         }
 
         .frame-corner {
@@ -652,18 +652,18 @@
 
         .watermark {
             position: absolute;
-            left: 28px;
-            bottom: 28px;
-            width: 220px;
+            left: 40px;
+            bottom: 40px;
+            width: 280px;
             z-index: 2;
             pointer-events: none;
-            opacity: 0.28;
+            opacity: 0.38;
             animation: wm-pulse 5s ease-in-out infinite;
         }
 
         @keyframes wm-pulse {
-            0%, 100% { opacity: 0.24; filter: drop-shadow(0 0 24px rgba(255, 30, 60, 0.5)) drop-shadow(0 0 40px rgba(255, 215, 0, 0.35)); }
-            50%       { opacity: 0.32; filter: drop-shadow(0 0 36px rgba(255, 30, 60, 0.75)) drop-shadow(0 0 56px rgba(255, 215, 0, 0.5)); }
+            0%, 100% { opacity: 0.34; filter: drop-shadow(0 0 30px rgba(255, 30, 60, 0.65)) drop-shadow(0 0 50px rgba(255, 215, 0, 0.45)); }
+            50%       { opacity: 0.42; filter: drop-shadow(0 0 45px rgba(255, 30, 60, 0.9)) drop-shadow(0 0 70px rgba(255, 215, 0, 0.6)); }
         }
 
         .watermark svg { display: block; width: 100%; height: auto; }
@@ -680,7 +680,8 @@
             <div class="shimmer"></div>
             <div class="panel-embers" aria-hidden="true"></div>
             <div class="brand">
-                <img class="avatar" src="image/icon.png" alt="THO DARIUS" width="62" height="62" />
+                <img class="avatar" src="image/icon.png" alt="THO DARIUS" width="62" height="62"
+                     onerror="this.onerror=null;this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect fill=%22%231a0f0c%22 width=%22100%22 height=%22100%22/%3E%3Ctext x=%2250%22 y=%2258%22 text-anchor=%22middle%22 fill=%22%23ffd700%22 font-size=%2240%22 font-family=%22serif%22%3ET%3C/text%3E%3C/svg%3E';" />
                 <div>
                     <h1 class="name" id="streamerName">THO DARIUS</h1>
                     <p class="meta">
@@ -808,6 +809,11 @@
     <script src="js/main.js"></script>
     <script>
     (function () {
+        /* PREVIEW ONLY - REMOVE FOR OBS: tự bật nền xanh khi xem browser, tắt trong OBS */
+        if (typeof window.obsstudio === 'undefined') {
+            document.body.classList.add('preview-mode');
+        }
+
         let cfg = {};
         try { cfg = JSON.parse(document.getElementById('overlay-config').textContent); } catch (_) {}
 
